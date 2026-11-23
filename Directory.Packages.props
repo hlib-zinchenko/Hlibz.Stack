@@ -16,7 +16,7 @@
         <PackageVersion Include="Hlibz.Results" Version="2.2.0" />
         <PackageVersion Include="Hlibz.Results.AspNetCore" Version="2.2.0" />
         <PackageVersion Include="Hlibz.TypeRules.Analyzers" Version="1.0.0" />
-        <PackageVersion Include="Hlibz.UseCases" Version="1.0.0-preview.1" />
+        <PackageVersion Include="Hlibz.UseCases" Version="1.0.0-preview.2" />
     </ItemGroup>
 
     <ItemGroup>
