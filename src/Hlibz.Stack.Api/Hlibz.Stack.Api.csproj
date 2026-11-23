@@ -1,0 +1,43 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <!--
+      The HTTP client of the use cases: endpoints as classes (Hlibz.MinimalApi.Endpoints), Results
+      sent as responses with one error body (Hlibz.Results.AspNetCore), OpenAPI documents that say
+      what the use cases check (Hlibz.OpenApi.AspNetCore + Hlibz.OpenApi.UseCases, and
+      Hlibz.OpenApi.Paging for sort strings), and ReDoc to read them (Hlibz.Redoc.AspNetCore).
+
+      Every build writes the documents to openapi/ (committed; CI fails when they're stale). The
+      tool runs Program.cs in Development with no server listening; Program.cs then skips the
+      database.
+  -->
+  <PropertyGroup>
+    <OpenApiDocumentsDirectory>$(MSBuildProjectDirectory)/openapi</OpenApiDocumentsDirectory>
+    <OpenApiGenerateDocumentsOptions>--environment Development</OpenApiGenerateDocumentsOptions>
+    <!-- AddXmlDocumentation reads each assembly's .xml beside it, packages' included. -->
+    <CopyDocumentationFilesFromPackages>true</CopyDocumentationFilesFromPackages>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Hlibz.Stack.Infrastructure\Hlibz.Stack.Infrastructure.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!--
+      Direct, as every app needs it: Microsoft.AspNetCore.OpenApi's XML comment generator is an
+      analyzer, and analyzers don't flow through a package reference.
+    -->
+    <PackageReference Include="Microsoft.AspNetCore.OpenApi" />
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" />
+    <PackageReference Include="Hlibz.MinimalApi.Endpoints" />
+    <PackageReference Include="Hlibz.OpenApi.Paging" />
+    <PackageReference Include="Hlibz.OpenApi.UseCases" />
+    <PackageReference Include="Hlibz.Redoc.AspNetCore" />
+    <PackageReference Include="Hlibz.Results.AspNetCore" />
+    <PackageReference Include="Microsoft.Extensions.ApiDescription.Server" PrivateAssets="all" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="Hlibz.Stack.Tests" />
+  </ItemGroup>
+
+</Project>

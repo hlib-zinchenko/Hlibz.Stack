@@ -1,0 +1,16 @@
+[*.cs]
+
+# CA1707: Identifiers should not contain underscores - underscores are idiomatic for test method names.
+dotnet_diagnostic.CA1707.severity = none
+
+# CA1515: test classes are public, as xUnit needs.
+dotnet_diagnostic.CA1515.severity = none
+
+# CA2007: tests have no synchronization context to avoid.
+dotnet_diagnostic.CA2007.severity = none
+
+# CA2234: string URIs read better in HTTP tests.
+dotnet_diagnostic.CA2234.severity = none
+
+# Test methods are named Subject_WithCondition_ExpectedOutcome, without an Async suffix.
+dotnet_naming_rule.async_methods_should_end_with_async.severity = none

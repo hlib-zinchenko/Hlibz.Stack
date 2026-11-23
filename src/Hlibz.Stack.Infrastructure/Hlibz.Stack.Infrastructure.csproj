@@ -1,0 +1,25 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+      Persistence on SQLite (EF Core, snake_case names, Hlibz.EntityFrameworkCore.ModelRules) and
+      the access tokens the hosts accept. Both hosts use this project as it is.
+  -->
+  <ItemGroup>
+    <ProjectReference Include="..\Hlibz.Stack.Application\Hlibz.Stack.Application.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="EFCore.NamingConventions" />
+    <PackageReference Include="Hlibz.EntityFrameworkCore.ModelRules" />
+    <PackageReference Include="Hlibz.Paging.EntityFrameworkCore" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" PrivateAssets="all" />
+    <PackageReference Include="Microsoft.Extensions.Options.ConfigurationExtensions" />
+    <PackageReference Include="Microsoft.IdentityModel.JsonWebTokens" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="Hlibz.Stack.Tests" />
+  </ItemGroup>
+
+</Project>

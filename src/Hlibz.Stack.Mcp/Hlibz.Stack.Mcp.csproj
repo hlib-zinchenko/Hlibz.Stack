@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <!--
+      The MCP client of the same use cases: tools that call the handlers the Api calls, so they
+      validate and authorize exactly alike. Streamable HTTP, with the Api's access tokens, and a
+      docs page (Hlibz.McpDocs.AspNetCore) at /mcp-docs.
+  -->
+  <ItemGroup>
+    <ProjectReference Include="..\Hlibz.Stack.Infrastructure\Hlibz.Stack.Infrastructure.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Hlibz.McpDocs.AspNetCore" />
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" />
+    <PackageReference Include="ModelContextProtocol.AspNetCore" />
+  </ItemGroup>
+
+</Project>

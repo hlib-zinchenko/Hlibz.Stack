@@ -1,0 +1,596 @@
+{
+  "openapi": "3.2.0",
+  "info": {
+    "title": "Hlibz.Stack.Api | admin",
+    "version": "1.0.0"
+  },
+  "paths": {
+    "/api/admin/users/{userId}/role": {
+      "put": {
+        "tags": [
+          "Admin: users"
+        ],
+        "summary": "Changes a user's role.",
+        "description": "Changes what a user may do. Admins can't change their own role.",
+        "operationId": "ChangeUserRole",
+        "parameters": [
+          {
+            "name": "userId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UserRoleChange"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The request didn't pass validation.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": [ ]
+          }
+        ]
+      }
+    },
+    "/api/admin/users": {
+      "get": {
+        "tags": [
+          "Admin: users"
+        ],
+        "summary": "Lists users.",
+        "description": "Lists every user.",
+        "operationId": "GetUsers",
+        "parameters": [
+          {
+            "name": "sort",
+            "in": "query",
+            "description": "The order.\n\nSort by: email, name, role, created_at. Comma-separated, each optionally followed by :asc (the default) or :desc. Default: email:asc.",
+            "schema": {
+              "type": "string",
+              "default": "email:asc",
+              "x-rules": [
+                "Sort by: email, name, role, created_at. Comma-separated, each optionally followed by :asc (the default) or :desc. Default: email:asc."
+              ]
+            }
+          },
+          {
+            "name": "search",
+            "in": "query",
+            "description": "Text to search for.",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "description": "The page, from 1.",
+            "schema": {
+              "maximum": 2147483647,
+              "minimum": 1,
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          },
+          {
+            "name": "per_page",
+            "in": "query",
+            "description": "The items per page; 100 when left out.",
+            "schema": {
+              "maximum": 100,
+              "minimum": 1,
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PagedDataOfUserDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The request didn't pass validation.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": [ ]
+          }
+        ]
+      }
+    },
+    "/api/admin/users/{userId}/todo-lists": {
+      "get": {
+        "tags": [
+          "Admin: users"
+        ],
+        "summary": "Lists a user's todo lists.",
+        "description": "Lists a user's todo lists. Open, rename or delete one through `api/todo-lists/{id}`, as its owner would.",
+        "operationId": "GetUserTodoLists",
+        "parameters": [
+          {
+            "name": "userId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "sort",
+            "in": "query",
+            "description": "The order.\n\nSort by: title, item_count, created_at. Comma-separated, each optionally followed by :asc (the default) or :desc. Default: created_at:desc.",
+            "schema": {
+              "type": "string",
+              "default": "created_at:desc",
+              "x-rules": [
+                "Sort by: title, item_count, created_at. Comma-separated, each optionally followed by :asc (the default) or :desc. Default: created_at:desc."
+              ]
+            }
+          },
+          {
+            "name": "search",
+            "in": "query",
+            "description": "Text to search for.",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "description": "The page, from 1.",
+            "schema": {
+              "maximum": 2147483647,
+              "minimum": 1,
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          },
+          {
+            "name": "per_page",
+            "in": "query",
+            "description": "The items per page; 100 when left out.",
+            "schema": {
+              "maximum": 100,
+              "minimum": 1,
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PagedDataOfTodoListDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The request didn't pass validation.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": [ ]
+          }
+        ]
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "ErrorResponse": {
+        "required": [
+          "message",
+          "code"
+        ],
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string",
+            "description": "A human-readable description of what went wrong."
+          },
+          "code": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "The machine-readable error code clients branch on (e.g. `orders_1001`), or `null` when the failure has no specific code."
+          },
+          "validation_errors": {
+            "type": [
+              "null",
+              "object"
+            ],
+            "additionalProperties": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "description": "The validation failures of a 400, keyed by the offending field, each with its messages; left out of every other error."
+          }
+        },
+        "description": "The body of every error response (400, 401, 403, 404, 409, 429, ...)."
+      },
+      "PagedDataOfTodoListDto": {
+        "required": [
+          "data",
+          "paging_metadata"
+        ],
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TodoListDto"
+            },
+            "description": "The items on the page."
+          },
+          "paging_metadata": {
+            "description": "Where the page sits in the whole list.",
+            "$ref": "#/components/schemas/PagingMetadata"
+          }
+        },
+        "description": "One page of a list, with its PagedData.PagingMetadata."
+      },
+      "PagedDataOfUserDto": {
+        "required": [
+          "data",
+          "paging_metadata"
+        ],
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/UserDto"
+            },
+            "description": "The items on the page."
+          },
+          "paging_metadata": {
+            "description": "Where the page sits in the whole list.",
+            "$ref": "#/components/schemas/PagingMetadata"
+          }
+        },
+        "description": "One page of a list, with its PagedData.PagingMetadata."
+      },
+      "PagingMetadata": {
+        "required": [
+          "total_items",
+          "current_page",
+          "per_page",
+          "total_pages",
+          "has_next_page"
+        ],
+        "type": "object",
+        "properties": {
+          "total_items": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "description": "The number of items in the whole list.",
+            "format": "int32"
+          },
+          "current_page": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "description": "The 1-based number of this page.",
+            "format": "int32"
+          },
+          "per_page": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "description": "The page size.",
+            "format": "int32"
+          },
+          "total_pages": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "description": "The number of pages; `0` for an empty list.",
+            "format": "int32"
+          },
+          "has_next_page": {
+            "type": "boolean",
+            "description": "Whether a page follows this one."
+          }
+        },
+        "description": "Where a page sits in the whole list."
+      },
+      "Role": {
+        "enum": [
+          "User",
+          "Admin"
+        ],
+        "description": "What a user may do.",
+        "x-enumDescriptions": {
+          "User": "Manages their own todo lists.",
+          "Admin": "Manages every user's todo lists, and users' roles."
+        }
+      },
+      "TodoListDto": {
+        "required": [
+          "id",
+          "owner_id",
+          "title",
+          "item_count",
+          "done_count",
+          "created_at",
+          "updated_at"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "description": "The list's id.",
+            "$ref": "#/components/schemas/TodoListId"
+          },
+          "owner_id": {
+            "description": "The user the list belongs to.",
+            "$ref": "#/components/schemas/UserId"
+          },
+          "title": {
+            "type": "string",
+            "description": "The list's title."
+          },
+          "item_count": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "description": "How many items the list has.",
+            "format": "int32"
+          },
+          "done_count": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "description": "How many of them are done.",
+            "format": "int32"
+          },
+          "created_at": {
+            "type": "string",
+            "description": "When the list was created.",
+            "format": "date-time"
+          },
+          "updated_at": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "When the list or its items last changed, if ever.",
+            "format": "date-time"
+          }
+        },
+        "description": "A todo list in a list of them: its counts, not its items."
+      },
+      "TodoListId": {
+        "type": "string",
+        "description": "The id of a todo list.",
+        "format": "uuid"
+      },
+      "UserDto": {
+        "required": [
+          "id",
+          "email",
+          "name",
+          "role",
+          "created_at"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "description": "The user's id.",
+            "$ref": "#/components/schemas/UserId"
+          },
+          "email": {
+            "type": "string",
+            "description": "The email address the user signs in with."
+          },
+          "name": {
+            "type": "string",
+            "description": "The name the user goes by."
+          },
+          "role": {
+            "description": "What the user may do.",
+            "$ref": "#/components/schemas/Role"
+          },
+          "created_at": {
+            "type": "string",
+            "description": "When the user signed up.",
+            "format": "date-time"
+          }
+        },
+        "description": "A user."
+      },
+      "UserId": {
+        "type": "string",
+        "description": "The id of a user.",
+        "format": "uuid"
+      },
+      "UserRoleChange": {
+        "required": [
+          "role"
+        ],
+        "type": "object",
+        "properties": {
+          "role": {
+            "description": "The role.",
+            "$ref": "#/components/schemas/Role"
+          }
+        },
+        "description": "A user's new role."
+      }
+    },
+    "securitySchemes": {
+      "Bearer": {
+        "type": "http",
+        "description": "The access token from POST api/auth/login, sent as 'Authorization: Bearer {token}'.",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      }
+    }
+  },
+  "tags": [
+    {
+      "name": "Admin: users"
+    }
+  ]
+}

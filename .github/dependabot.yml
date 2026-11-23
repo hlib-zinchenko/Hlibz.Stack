@@ -1,0 +1,25 @@
+# Weekly, grouped. The Hlibz packages get a PR of their own: seeing them meet each other's new
+# versions is what this repository is for.
+version: 2
+updates:
+  - package-ecosystem: nuget
+    directory: /
+    schedule:
+      interval: weekly
+    groups:
+      hlibz:
+        patterns: ["Hlibz.*"]
+      nuget:
+        patterns: ["*"]
+        exclude-patterns: ["Hlibz.*"]
+  - package-ecosystem: dotnet-sdk
+    directory: /
+    schedule:
+      interval: weekly
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    groups:
+      actions:
+        patterns: ["*"]

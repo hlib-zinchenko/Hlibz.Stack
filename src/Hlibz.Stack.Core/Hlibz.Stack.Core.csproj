@@ -1,0 +1,12 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+      The domain: entities, their strongly-typed ids and the repositories that load them. No EF Core.
+      Hlibz.Results is part of the domain's vocabulary, so every layer above gets it from here.
+  -->
+  <ItemGroup>
+    <PackageReference Include="Hlibz.Results" />
+    <PackageReference Include="StronglyTypedId" />
+  </ItemGroup>
+
+</Project>

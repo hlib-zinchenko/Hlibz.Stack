@@ -1,0 +1,18 @@
+<Solution>
+  <Folder Name="/Solution Items/">
+    <File Path=".editorconfig" />
+    <File Path="Directory.Build.props" />
+    <File Path="Directory.Packages.props" />
+    <File Path="global.json" />
+  </Folder>
+  <Folder Name="/src/">
+    <Project Path="src/Hlibz.Stack.Core/Hlibz.Stack.Core.csproj" />
+    <Project Path="src/Hlibz.Stack.Application/Hlibz.Stack.Application.csproj" />
+    <Project Path="src/Hlibz.Stack.Infrastructure/Hlibz.Stack.Infrastructure.csproj" />
+    <Project Path="src/Hlibz.Stack.Api/Hlibz.Stack.Api.csproj" />
+    <Project Path="src/Hlibz.Stack.Mcp/Hlibz.Stack.Mcp.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/Hlibz.Stack.Tests/Hlibz.Stack.Tests.csproj" />
+  </Folder>
+</Solution>

@@ -1,0 +1,4 @@
+# EF Core writes these files: no analyzers.
+[*.cs]
+generated_code = true
+dotnet_diagnostic.S101.severity = none

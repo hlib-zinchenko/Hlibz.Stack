@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+      The use cases: every rule the hosts share. Hlibz.UseCases registers the handlers and runs
+      each through its pipeline (validation, then the authorization filter, then the handler), so
+      the Api and the Mcp host check exactly the same things. No ASP.NET Core and no EF Core here.
+  -->
+  <ItemGroup>
+    <ProjectReference Include="..\Hlibz.Stack.Core\Hlibz.Stack.Core.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Hlibz.Paging" />
+    <PackageReference Include="Hlibz.UseCases" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="Hlibz.Stack.Infrastructure" />
+    <InternalsVisibleTo Include="Hlibz.Stack.Tests" />
+  </ItemGroup>
+
+</Project>

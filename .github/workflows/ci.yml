@@ -1,0 +1,53 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-dotnet@v6
+        with:
+          global-json-file: global.json
+
+      - name: Restore
+        run: |
+          dotnet restore
+          dotnet tool restore
+
+      - name: Build
+        run: dotnet build --no-restore --configuration Release
+
+      - name: Test
+        run: dotnet test --no-build --configuration Release
+
+      # The build wrote the Api's OpenAPI documents; the committed ones must match.
+      - name: OpenAPI documents are up to date
+        run: git diff --exit-code src/Hlibz.Stack.Api/openapi
+
+      # Every model change comes with its migration.
+      - name: Migrations are up to date
+        run: >
+          dotnet ef migrations has-pending-model-changes --no-build --configuration Release
+          --project src/Hlibz.Stack.Infrastructure --startup-project src/Hlibz.Stack.Infrastructure
+
+      # The use cases serve every host, so they depend on neither ASP.NET Core nor EF Core.
+      - name: Application has no ASP.NET Core or EF Core
+        run: |
+          dotnet list src/Hlibz.Stack.Application package --include-transitive | tee packages.txt
+          ! grep -qiE "AspNetCore|EntityFrameworkCore" packages.txt
+          ! grep -qi "Microsoft.AspNetCore.App" src/Hlibz.Stack.Application/bin/Release/net11.0/Hlibz.Stack.Application.deps.json
