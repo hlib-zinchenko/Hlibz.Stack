@@ -5,18 +5,18 @@
 
     <!-- The Hlibz packages this repository exists to try together. -->
     <ItemGroup>
-        <PackageVersion Include="Hlibz.EntityFrameworkCore.ModelRules" Version="2.0.0-preview.1" />
-        <PackageVersion Include="Hlibz.McpDocs.AspNetCore" Version="0.1.3" />
+        <PackageVersion Include="Hlibz.EntityFrameworkCore.ModelRules" Version="2.0.0" />
+        <PackageVersion Include="Hlibz.McpDocs.AspNetCore" Version="0.2.0-preview.1" />
         <PackageVersion Include="Hlibz.MinimalApi.Endpoints" Version="1.0.0" />
-        <PackageVersion Include="Hlibz.OpenApi.Paging" Version="1.1.0-preview.2" />
-        <PackageVersion Include="Hlibz.OpenApi.UseCases" Version="1.1.0-preview.2" />
-        <PackageVersion Include="Hlibz.Paging" Version="1.1.0-preview.1" />
-        <PackageVersion Include="Hlibz.Paging.EntityFrameworkCore" Version="1.1.0-preview.1" />
+        <PackageVersion Include="Hlibz.OpenApi.Paging" Version="1.1.0" />
+        <PackageVersion Include="Hlibz.OpenApi.UseCases" Version="1.1.0" />
+        <PackageVersion Include="Hlibz.Paging" Version="1.1.0" />
+        <PackageVersion Include="Hlibz.Paging.EntityFrameworkCore" Version="1.1.0" />
         <PackageVersion Include="Hlibz.Redoc.AspNetCore" Version="2.6.0" />
         <PackageVersion Include="Hlibz.Results" Version="2.2.0" />
         <PackageVersion Include="Hlibz.Results.AspNetCore" Version="2.2.0" />
         <PackageVersion Include="Hlibz.TypeRules.Analyzers" Version="1.0.0" />
-        <PackageVersion Include="Hlibz.UseCases" Version="1.0.0-preview.1" />
+        <PackageVersion Include="Hlibz.UseCases" Version="1.0.0" />
     </ItemGroup>
 
     <ItemGroup>
