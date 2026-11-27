@@ -75,9 +75,8 @@ commit the changed OpenAPI documents; CI diffs them.
 ## Packages
 
 The Hlibz .NET 11 majors (Hlibz.Results 3, Hlibz.UseCases 2, Hlibz.OpenApi 2,
-Hlibz.MinimalApi.Endpoints 2) aren't on nuget.org yet: `NuGet.config` reads them from the local
-folder feed `~/LocalNuGet`, where each repository's `dotnet pack` output is copied. CI can't
-restore until they ship.
+Hlibz.MinimalApi.Endpoints 2) and Hlibz.McpDocs.AspNetCore 0.3 are previews on nuget.org; move
+to each stable release when it ships.
 
 ## Code style
 

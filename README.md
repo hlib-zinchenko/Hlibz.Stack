@@ -32,10 +32,9 @@ Hlibz.Stack.Mcp             MCP: the same use cases as tools, a docs page      h
 
 ## Run it
 
-Requires the .NET 11 SDK, and the Hlibz .NET 11 majors (Hlibz.Results 3 with the new
-Hlibz.Results.Mcp, Hlibz.UseCases 2, Hlibz.OpenApi 2, Hlibz.MinimalApi.Endpoints 2) and
-Hlibz.McpDocs.AspNetCore 0.3 packed into `~/LocalNuGet`: they aren't on
-nuget.org yet, and `NuGet.config` reads them from there. Each host migrates the SQLite database (`.data/stack.db`, shared by
+Requires the .NET 11 SDK; the Hlibz packages are previews on nuget.org (the .NET 11 majors:
+Hlibz.Results 3 with Hlibz.Results.Mcp, Hlibz.UseCases 2, Hlibz.OpenApi 2,
+Hlibz.MinimalApi.Endpoints 2; and Hlibz.McpDocs.AspNetCore 0.3). Each host migrates the SQLite database (`.data/stack.db`, shared by
 both) when it starts, and seeds two users in Development:
 
 | Email | Password | Role |
