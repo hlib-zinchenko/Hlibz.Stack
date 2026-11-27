@@ -5,6 +5,7 @@ using Hlibz.Stack.Application.ReadRepositories;
 using Hlibz.Stack.Infrastructure.Auth;
 using Hlibz.Stack.Infrastructure.Database;
 using Hlibz.Stack.Infrastructure.Repositories;
+using Hlibz.UseCases;
 
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -17,8 +18,11 @@ public static class StackInfrastructureModule
 {
     /// <summary>
     /// Registers the SQLite database (connection string <c>Stack</c>), the repositories the use
-    /// cases load and read through, and <see cref="IAccessTokenIssuer"/> (section
-    /// <c>Auth:Jwt</c>, checked at startup).
+    /// cases load and read through, the use case filter that answers a save whose rows changed
+    /// meanwhile with <see cref="Hlibz.Results.ConcurrencyConflict"/>, and
+    /// <see cref="IAccessTokenIssuer"/> (section <c>Auth:Jwt</c>, checked at startup). Call it
+    /// after <see cref="Application.StackApplicationModule.AddStackApplication"/>, so that filter
+    /// runs inside the authorization filter.
     /// </summary>
     /// <param name="services">The services.</param>
     /// <param name="configuration">The host's configuration.</param>
@@ -41,6 +45,7 @@ public static class StackInfrastructureModule
         services.AddScoped<ITodoListRepository, TodoListRepository>();
         services.AddScoped<IUserReadRepository, UserReadRepository>();
         services.AddScoped<ITodoListReadRepository, TodoListReadRepository>();
+        services.AddUseCaseFilter<ConcurrencyConflictFilter>();
 
         services.AddOptions<SeedOptions>().BindConfiguration(SeedOptions.SectionName);
         services.AddOptions<JwtOptions>()

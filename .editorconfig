@@ -735,7 +735,3 @@ typerules.ef-configurations.namespace_pattern = Hlibz.Stack.Infrastructure.Datab
 # Use case filters: sealed.
 typerules.filters.match = T:Hlibz.UseCases.IUseCaseFilter
 typerules.filters.require_sealed = true
-
-# Error sets (UseCases/**/*Error.cs) are unions: structs without equality, which CA1815 flags.
-[src/Hlibz.Stack.Application/UseCases/**/*Error.cs]
-dotnet_diagnostic.CA1815.severity = none

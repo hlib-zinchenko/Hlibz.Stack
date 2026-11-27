@@ -54,10 +54,17 @@ commit the changed OpenAPI documents; CI diffs them.
   `TimestampInterceptor` (created/updated times, and a list's `updated_at` when its items change),
   repositories, `JwtAccessTokenIssuer`, `StackDatabase.InitializeAsync` (migrate, then seed from
   `Seed:Users` when there are no users). Migrations in `Database/Migrations` (no analyzers).
+  `ConcurrencyConflictFilter`, a use case filter `AddStackInfrastructure` registers (after
+  `AddStackApplication`, so it runs inside the authorization filter), answers EF Core's
+  `DbUpdateConcurrencyException` with the ambient `ConcurrencyConflict`.
 - **Api**: `Hlibz.MinimalApi.Endpoints` classes under `Endpoints/<Area>/`, one per route, calling
   one handler and returning its `Result<T, TError>`: `WithResultResponses()` documents the error
   set and `AddResults()` (Hlibz.OpenApi.Results) each error's body, so no `ProducesErrors`. The use case is the body where it can be; route ids plus a body record otherwise;
-  list query strings go through a snake_case `ListParameters` subclass. Admin groups implement
+  list query strings go through a snake_case `ListParameters` subclass. An endpoint that sends
+  something other than the use case's value (`ExportTodoListEndpoint`, Markdown) returns `IResult`
+  and declares the use case's error set with `ProducesErrorSet<TError>()`. The `api/auth` group is
+  rate limited (`AuthEndpointGroup.RateLimitPolicy`, `RateLimits:Auth:PermitLimit` a minute per
+  address; the tests raise it); `OnRejected` writes the ambient `RateLimited` with `Retry-After`. Admin groups implement
   `IAdminEndpointGroup` (admin document, signed-in only). Two OpenAPI documents, `stack` and
   `admin`, written to `openapi/` on build.
 - **Mcp**: static tool classes under `Tools/`, one tool per use case, ids as `Guid` parameters,
@@ -67,7 +74,8 @@ commit the changed OpenAPI documents; CI diffs them.
   tool's errors into its `_meta` (`hlibz/errors`, the docs page's Errors block). `Errors/`:
   `StackGuidance`, a template per error type whose `{placeholders}` are the error's details, and
   `UseCaseToolErrors`, the `IToolErrorSource` that gives each tool its use case's errors (the
-  handler's error set from `IUseCaseCatalog`, plus `validation_failed`/`forbidden`), so the tools
+  handler's error set from `IUseCaseCatalog`, plus `validation_failed`/`forbidden`, and
+  `concurrency_conflict` for a tool that isn't `ReadOnly`), so the tools
   declare none. The host doesn't start when an error has no guidance or a placeholder isn't a
   detail: a new error in a tool's error set needs guidance first; `McpToolErrorTests` start it.
   Stateless HTTP transport, so each tool call reads its own request's token.

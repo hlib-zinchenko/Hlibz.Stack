@@ -1,14 +1,17 @@
 // The Hlibz stack's HTTP host. The use cases (Hlibz.Stack.Application) hold every rule; this app
 // binds HTTP to them, sends their Results, and documents what they check.
 // Run it and open http://localhost:5400/api-docs.
+using System.Globalization;
 using System.Reflection;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using System.Threading.RateLimiting;
 
 using Hlibz.OpenApi;
 using Hlibz.Redoc.Extensions;
 using Hlibz.Stack.Api;
 using Hlibz.Stack.Api.Endpoints;
+using Hlibz.Stack.Api.Endpoints.Auth;
 using Hlibz.Stack.Application;
 using Hlibz.Stack.Application.Auth;
 using Hlibz.Stack.Core.Entities;
@@ -49,6 +52,29 @@ builder.Services.ConfigureHttpJsonOptions(options =>
 // the auth gate's. Each declared error is documented with its own code and details (AddResults).
 builder.Services.AddResultErrorResponses();
 
+// Logging in and signing up are limited per client address (RateLimits:Auth:PermitLimit calls a
+// minute). A call turned away gets the ambient RateLimited, 429 rate_limited, in the same body as
+// any other error, with Retry-After.
+int authPermitLimit = builder.Configuration.GetValue("RateLimits:Auth:PermitLimit", 10);
+builder.Services.AddRateLimiter(limiter =>
+{
+    limiter.AddPolicy(AuthEndpointGroup.RateLimitPolicy, context => RateLimitPartition.GetFixedWindowLimiter(
+        context.Connection.RemoteIpAddress?.ToString() ?? string.Empty,
+        _ => new FixedWindowRateLimiterOptions { PermitLimit = authPermitLimit, Window = TimeSpan.FromMinutes(1) }));
+    limiter.OnRejected = (context, cancellationToken) =>
+    {
+        if (context.Lease.TryGetMetadata(MetadataName.RetryAfter, out TimeSpan retryAfter))
+        {
+            context.HttpContext.Response.Headers.RetryAfter =
+                ((int)Math.Ceiling(retryAfter.TotalSeconds)).ToString(CultureInfo.InvariantCulture);
+        }
+
+        return new ValueTask(context.HttpContext.Response.WriteErrorAsync(
+            Result.Failure(new RateLimited()),
+            cancellationToken));
+    };
+});
+
 // One document for the app, one for the admin endpoints; Microsoft.AspNetCore.OpenApi builds a
 // document again on every request, so it's cached.
 builder.Services.AddOutputCache();
@@ -67,11 +93,13 @@ if (Assembly.GetEntryAssembly()?.GetName().Name != "GetDocument.Insider")
 
 app.UseAuthentication();
 app.UseAuthorization();
+app.UseRateLimiter();
 app.UseOutputCache();
 app.MapOpenApi().CacheOutput();
 
 // Every endpoint returns its use case's Result as is. WithResultResponses documents the errors its
-// handler's error set declares; Endpoints adds 401/403 where a group requires authorization.
+// handler's error set declares; Endpoints adds 401/403 where a group requires authorization, 429
+// where it's rate limited.
 app.MapEndpoints(typeof(Program).Assembly, options => options
     .UseErrorResponse<ErrorResponse>()
     .ConfigureGroups(group => group.Builder.WithGroupName(

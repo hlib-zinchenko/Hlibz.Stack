@@ -39,6 +39,9 @@ internal static class StackGuidance
             "Admins can't change their own role. Tell the user another admin has to do it; retrying won't help.")
         .Guide<ValidationFailed>(
             "Fix these arguments and call the tool again: {errors}")
+        .Guide<ConcurrencyConflict>(
+            "The data changed while this call saved it: someone else changed or deleted it. Get it "
+            + "again (get_todo_list, admin_list_users), then retry if the change still makes sense.")
         .Guide<Forbidden>(
             "Only admins may do this. Tell the user; retrying won't help.")
         .Guide<Unauthorized>(

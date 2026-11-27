@@ -39,7 +39,31 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/InvalidCredentialsErrorResponse"
+                  "oneOf": [
+                    {
+                      "$ref": "#/components/schemas/InvalidCredentialsErrorResponse"
+                    },
+                    {
+                      "$ref": "#/components/schemas/UnauthorizedErrorResponse"
+                    }
+                  ],
+                  "discriminator": {
+                    "propertyName": "code",
+                    "mapping": {
+                      "stack_1002": "#/components/schemas/InvalidCredentialsErrorResponse",
+                      "unauthorized": "#/components/schemas/UnauthorizedErrorResponse"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too Many Requests",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
                 }
               }
             }
@@ -91,7 +115,31 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/EmailTakenErrorResponse"
+                  "oneOf": [
+                    {
+                      "$ref": "#/components/schemas/EmailTakenErrorResponse"
+                    },
+                    {
+                      "$ref": "#/components/schemas/ConcurrencyConflictErrorResponse"
+                    }
+                  ],
+                  "discriminator": {
+                    "propertyName": "code",
+                    "mapping": {
+                      "stack_1001": "#/components/schemas/EmailTakenErrorResponse",
+                      "concurrency_conflict": "#/components/schemas/ConcurrencyConflictErrorResponse"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too Many Requests",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
                 }
               }
             }
@@ -190,13 +238,17 @@
                     },
                     {
                       "$ref": "#/components/schemas/TodoListFullErrorResponse"
+                    },
+                    {
+                      "$ref": "#/components/schemas/ConcurrencyConflictErrorResponse"
                     }
                   ],
                   "discriminator": {
                     "propertyName": "code",
                     "mapping": {
                       "stack_1010": "#/components/schemas/TodoItemTitleTakenErrorResponse",
-                      "stack_1009": "#/components/schemas/TodoListFullErrorResponse"
+                      "stack_1009": "#/components/schemas/TodoListFullErrorResponse",
+                      "concurrency_conflict": "#/components/schemas/ConcurrencyConflictErrorResponse"
                     }
                   }
                 }
@@ -281,13 +333,17 @@
                     },
                     {
                       "$ref": "#/components/schemas/TodoListLimitReachedErrorResponse"
+                    },
+                    {
+                      "$ref": "#/components/schemas/ConcurrencyConflictErrorResponse"
                     }
                   ],
                   "discriminator": {
                     "propertyName": "code",
                     "mapping": {
                       "stack_1007": "#/components/schemas/TodoListTitleTakenErrorResponse",
-                      "stack_1008": "#/components/schemas/TodoListLimitReachedErrorResponse"
+                      "stack_1008": "#/components/schemas/TodoListLimitReachedErrorResponse",
+                      "concurrency_conflict": "#/components/schemas/ConcurrencyConflictErrorResponse"
                     }
                   }
                 }
@@ -619,7 +675,21 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/TodoListTitleTakenErrorResponse"
+                  "oneOf": [
+                    {
+                      "$ref": "#/components/schemas/TodoListTitleTakenErrorResponse"
+                    },
+                    {
+                      "$ref": "#/components/schemas/ConcurrencyConflictErrorResponse"
+                    }
+                  ],
+                  "discriminator": {
+                    "propertyName": "code",
+                    "mapping": {
+                      "stack_1007": "#/components/schemas/TodoListTitleTakenErrorResponse",
+                      "concurrency_conflict": "#/components/schemas/ConcurrencyConflictErrorResponse"
+                    }
+                  }
                 }
               }
             }
@@ -630,6 +700,75 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": [ ]
+          }
+        ]
+      }
+    },
+    "/api/todo-lists/{id}/export": {
+      "get": {
+        "tags": [
+          "Todo lists"
+        ],
+        "summary": "Exports a todo list as a Markdown checklist.",
+        "description": "Exports a todo list as a Markdown checklist.",
+        "operationId": "ExportTodoList",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/markdown": {
+                "schema": {
+                  "type": "string",
+                  "format": "byte"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TodoListNotFoundErrorResponse"
                 }
               }
             }
@@ -822,7 +961,21 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/TodoItemTitleTakenErrorResponse"
+                  "oneOf": [
+                    {
+                      "$ref": "#/components/schemas/TodoItemTitleTakenErrorResponse"
+                    },
+                    {
+                      "$ref": "#/components/schemas/ConcurrencyConflictErrorResponse"
+                    }
+                  ],
+                  "discriminator": {
+                    "propertyName": "code",
+                    "mapping": {
+                      "stack_1010": "#/components/schemas/TodoItemTitleTakenErrorResponse",
+                      "concurrency_conflict": "#/components/schemas/ConcurrencyConflictErrorResponse"
+                    }
+                  }
                 }
               }
             }
@@ -924,6 +1077,28 @@
         },
         "description": "An access token, sent as `Authorization: Bearer {token}`."
       },
+      "ConcurrencyConflictErrorResponse": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/ErrorResponse"
+          },
+          {
+            "required": [
+              "code"
+            ],
+            "type": "object",
+            "properties": {
+              "code": {
+                "enum": [
+                  "concurrency_conflict"
+                ],
+                "type": "string"
+              }
+            }
+          }
+        ],
+        "description": "The data was changed by someone else. Please reload and retry."
+      },
       "CreateTodoListCommand": {
         "required": [
           "title"
@@ -972,11 +1147,8 @@
             "description": "A human-readable description of what went wrong."
           },
           "code": {
-            "type": [
-              "null",
-              "string"
-            ],
-            "description": "The machine-readable error code clients branch on (e.g. `orders_1001`), or `null` when the failure has no specific code."
+            "type": "string",
+            "description": "The machine-readable error code clients branch on (e.g. `orders_1001`): every error has one, the ones the API's catalog lists."
           },
           "validation_errors": {
             "type": [
@@ -1604,6 +1776,28 @@
           }
         ],
         "description": "The owner already has a todo list with this title."
+      },
+      "UnauthorizedErrorResponse": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/ErrorResponse"
+          },
+          {
+            "required": [
+              "code"
+            ],
+            "type": "object",
+            "properties": {
+              "code": {
+                "enum": [
+                  "unauthorized"
+                ],
+                "type": "string"
+              }
+            }
+          }
+        ],
+        "description": "Authentication is required."
       },
       "UserDto": {
         "required": [

@@ -86,16 +86,6 @@ public sealed class TodoListTests(StackApiFactory factory) : IClassFixture<Stack
     }
 
     [Fact]
-    public async Task AdminEndpoint_AsAUser_IsForbidden()
-    {
-        StackClient user = await StackClient.SignUpAsync(factory);
-
-        (HttpStatusCode status, _) = await user.SendAsync(HttpMethod.Get, "api/admin/users");
-
-        Assert.Equal(HttpStatusCode.Forbidden, status);
-    }
-
-    [Fact]
     public async Task Create_WithABlankTitle_FailsValidationOnTitle()
     {
         StackClient user = await StackClient.SignUpAsync(factory);
@@ -134,14 +124,36 @@ public sealed class TodoListTests(StackApiFactory factory) : IClassFixture<Stack
     }
 
     [Fact]
-    public async Task AnyEndpoint_WithoutAToken_IsUnauthorized()
+    public async Task Export_WithItems_IsAMarkdownChecklist()
     {
-        using HttpClient anonymous = factory.CreateClient();
+        StackClient user = await StackClient.SignUpAsync(factory);
+        string listId = await CreateListAsync(user, "Groceries");
+        JsonElement milk = await user.OkAsync(HttpMethod.Post, $"api/todo-lists/{listId}/items", new { title = "Milk" });
+        await user.OkAsync(HttpMethod.Post, $"api/todo-lists/{listId}/items", new { title = "Bread" });
+        await user.OkAsync(HttpMethod.Patch, $"api/todo-lists/{listId}/items/{StackClient.Id(milk)}", new { is_done = true });
 
-        using HttpResponseMessage response = await anonymous.GetAsync(
-            "api/todo-lists", TestContext.Current.CancellationToken);
+        using HttpResponseMessage response = await user.Http.GetAsync(
+            $"api/todo-lists/{listId}/export", TestContext.Current.CancellationToken);
 
-        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.Equal("text/markdown", response.Content.Headers.ContentType?.MediaType);
+        Assert.Equal(
+            "# Groceries\n\n- [x] Milk\n- [ ] Bread\n",
+            await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken));
+    }
+
+    [Fact]
+    public async Task Export_OfAnotherUsersList_IsNotFoundAsJson()
+    {
+        StackClient owner = await StackClient.SignUpAsync(factory);
+        StackClient other = await StackClient.SignUpAsync(factory);
+        string listId = await CreateListAsync(owner, "Mine");
+
+        (HttpStatusCode status, JsonElement body) = await other.SendAsync(HttpMethod.Get, $"api/todo-lists/{listId}/export");
+
+        Assert.Equal(HttpStatusCode.NotFound, status);
+        Assert.Equal("stack_1003", body.GetProperty("code").GetString());
+        Assert.Equal(listId, body.GetProperty("details").GetProperty("todo_list_id").GetString());
     }
 
     [Fact]

@@ -50,7 +50,21 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/OwnRoleChangeErrorResponse"
+                  "oneOf": [
+                    {
+                      "$ref": "#/components/schemas/OwnRoleChangeErrorResponse"
+                    },
+                    {
+                      "$ref": "#/components/schemas/ValidationFailedErrorResponse"
+                    }
+                  ],
+                  "discriminator": {
+                    "propertyName": "code",
+                    "mapping": {
+                      "stack_1006": "#/components/schemas/OwnRoleChangeErrorResponse",
+                      "validation_failed": "#/components/schemas/ValidationFailedErrorResponse"
+                    }
+                  }
                 }
               }
             }
@@ -335,11 +349,8 @@
             "description": "A human-readable description of what went wrong."
           },
           "code": {
-            "type": [
-              "null",
-              "string"
-            ],
-            "description": "The machine-readable error code clients branch on (e.g. `orders_1001`), or `null` when the failure has no specific code."
+            "type": "string",
+            "description": "The machine-readable error code clients branch on (e.g. `orders_1001`): every error has one, the ones the API's catalog lists."
           },
           "validation_errors": {
             "type": [
@@ -642,6 +653,29 @@
           }
         },
         "description": "A user's new role."
+      },
+      "ValidationFailedErrorResponse": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/ErrorResponse"
+          },
+          {
+            "required": [
+              "code",
+              "validationErrors"
+            ],
+            "type": "object",
+            "properties": {
+              "code": {
+                "enum": [
+                  "validation_failed"
+                ],
+                "type": "string"
+              }
+            }
+          }
+        ],
+        "description": "Validation failed. Please check the validation errors."
       }
     },
     "securitySchemes": {

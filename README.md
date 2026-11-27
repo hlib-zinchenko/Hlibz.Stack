@@ -22,9 +22,9 @@ Hlibz.Stack.Mcp             MCP: the same use cases as tools, a docs page      h
 | [Hlibz.Results](https://www.nuget.org/packages/Hlibz.Results) | Core, Application | Every use case returns a `Result`; one that can fail declares how as an error set, `Result<T, TError>` with `TError` a `union` of error records (`stack_10xx`), next to the use case |
 | [Hlibz.Paging](https://www.nuget.org/packages/Hlibz.Paging) (+ `.EntityFrameworkCore`) | Application, Infrastructure | `[Sortable]` DTOs, sort strings checked by the use case through `[SortableBy]`, `PaginateAsync` |
 | [Hlibz.EntityFrameworkCore.ModelRules](https://www.nuget.org/packages/Hlibz.EntityFrameworkCore.ModelRules) | Infrastructure | snake_case, max lengths, enums as strings, no shadow properties; a test verifies the model |
-| [Hlibz.MinimalApi.Endpoints](https://www.nuget.org/packages/Hlibz.MinimalApi.Endpoints) | Api | One class per endpoint, groups, the auth gate's `401`/`403` documented |
-| [Hlibz.Results.AspNetCore](https://www.nuget.org/packages/Hlibz.Results.AspNetCore) | Api | `Result` → HTTP, one `ErrorResponse` body for every failure, each endpoint's declared errors documented from its handler's error set |
-| [Hlibz.OpenApi.AspNetCore](https://www.nuget.org/packages/Hlibz.OpenApi.AspNetCore) + [Hlibz.OpenApi.UseCases](https://www.nuget.org/packages/Hlibz.OpenApi.UseCases) + [Hlibz.OpenApi.Paging](https://www.nuget.org/packages/Hlibz.OpenApi.Paging) + [Hlibz.OpenApi.Results](https://www.nuget.org/packages/Hlibz.OpenApi.Results) | Api | Strongly-typed ids as `uuid` components, XML docs, bearer security, the use cases' rules and `400`s, what each sort string sorts by and its default, each declared error's own body (its code and details; a `oneOf` where a status has two) |
+| [Hlibz.MinimalApi.Endpoints](https://www.nuget.org/packages/Hlibz.MinimalApi.Endpoints) | Api | One class per endpoint, groups, the auth gate's `401`/`403` and the rate limiter's `429` documented |
+| [Hlibz.Results.AspNetCore](https://www.nuget.org/packages/Hlibz.Results.AspNetCore) | Api | `Result` → HTTP, one `ErrorResponse` body for every failure (the rate limiter's too), each endpoint's declared errors documented from its handler's error set, or from `ProducesErrorSet` where the endpoint sends a file |
+| [Hlibz.OpenApi.AspNetCore](https://www.nuget.org/packages/Hlibz.OpenApi.AspNetCore) + [Hlibz.OpenApi.UseCases](https://www.nuget.org/packages/Hlibz.OpenApi.UseCases) + [Hlibz.OpenApi.Paging](https://www.nuget.org/packages/Hlibz.OpenApi.Paging) + [Hlibz.OpenApi.Results](https://www.nuget.org/packages/Hlibz.OpenApi.Results) | Api | Strongly-typed ids as `uuid` components, XML docs, bearer security, the use cases' rules and `400`s, what each sort string sorts by and its default, each declared error's own body (its code and details; a `oneOf` where a status has two, with the ambient errors sent with that status) |
 | [Hlibz.Redoc.AspNetCore](https://www.nuget.org/packages/Hlibz.Redoc.AspNetCore) | Api | ReDoc at `/api-docs`, an app and an admin document |
 | [Hlibz.Results.Mcp](https://www.nuget.org/packages/Hlibz.Results.Mcp) | Mcp | A failed tool returns `isError` with guidance (what to do next) and `{ code, details }`; each tool lists its errors in `_meta`; the host doesn't start while an error has no guidance |
 | [Hlibz.McpDocs.AspNetCore](https://www.nuget.org/packages/Hlibz.McpDocs.AspNetCore) | Mcp | The MCP server's docs page at `/mcp-docs`, with each tool's errors and their guidance |
@@ -64,7 +64,8 @@ Delete `.data/stack.db` to start over.
 ```text
 HTTP endpoint ─┐                                    ┌─ validation (DataAnnotations) → ValidationFailed
                ├─ I<UseCase>Handler.HandleAsync ────┼─ AuthorizationFilter → Unauthorized, Forbidden
-MCP tool ──────┘                                    └─ the handler → Result<T, TError>
+MCP tool ──────┘                                    ├─ ConcurrencyConflictFilter → ConcurrencyConflict
+                                                    └─ the handler → Result<T, TError>
 ```
 
 Clients never check anything themselves: a blank title, an unknown sort key, a user calling an
@@ -73,7 +74,10 @@ from the database on each call, not from the token, so a role change applies at 
 
 A use case's errors are its own: `UpdateTodoItemError(TodoListNotFound, TodoItemNotFound)` is
 what its handler may fail with, and the compiler holds it to that. The layers around it add the
-ambient errors (`validation_failed`, `unauthorized`, `forbidden`). Each error carries the data a
+ambient errors (`validation_failed`, `unauthorized`, `forbidden`, and `concurrency_conflict` when
+a save finds its rows changed meanwhile: `ConcurrencyConflictFilter` in Infrastructure turns EF
+Core's `DbUpdateConcurrencyException` into it, so no handler knows EF Core). The Api's rate
+limiter adds `rate_limited` before any use case runs. Each error carries the data a
 client acts on (`TodoListNotFound` its `todo_list_id`), and its message is for logs, not for end
 users: clients branch on the code.
 
@@ -98,6 +102,12 @@ endpoint's errors with their own bodies.
 | `validation_failed` | 400 | A blank title, an unknown sort key, ... | `validation_errors` |
 | `unauthorized` | 401 | No access token, or an expired one | |
 | `forbidden` | 403 | A user calling an admin endpoint, or another user's lists | |
+| `concurrency_conflict` | 409 | A change to a list someone deleted meanwhile | |
+| `rate_limited` | 429 | An 11th call to `api/auth` within a minute from one address (`Retry-After` says when to retry) | |
+
+`GET api/todo-lists/{id}/export` sends a list as a Markdown checklist, a file rather than the use
+case's value, so its endpoint declares the use case's errors with `ProducesErrorSet`; a missing
+list is the same JSON `404` as anywhere else.
 
 Over MCP a failed tool returns `isError` with guidance instead of the message: what to do next,
 in terms of the server's tools, with the details filled in (`stack_1003: No todo list with id … is
@@ -146,6 +156,14 @@ What this repository is for: places where the packages don't yet fit together sm
 - **Errors a handler returns on its own are invisible.** `GetTodoLists` returns `Forbidden` for
   another user's lists; it's ambient, so no error set or attribute says so, and
   `admin_list_user_todo_lists` doesn't list it.
+- **Ambient errors are listed by status code, not by what can happen.** A declared `409` lists
+  `concurrency_conflict` even on `POST api/auth/register`, which only inserts; login's declared
+  `401` lists `unauthorized` though login is anonymous. Any result accepts an ambient error, so
+  the documents list every one sent with a declared status rather than guess.
+- **A status code only ambient errors use stays a plain `ErrorResponse`, or isn't there.** The
+  gates' `401`/`403`/`429` and a validation-only `400` aren't narrowed to their codes the way a
+  declared status is; and the deletes, which can fail with `concurrency_conflict`, document no
+  `409` at all (nothing declares one).
 - **`403` on every signed-in endpoint.** Hlibz.MinimalApi.Endpoints documents `401`/`403` from
   `RequireAuthorization()`; only the use cases know which can be forbidden (`[AdminOnly]`, another
   user's lists), so `GET api/users/me` shows a `403` it never returns.

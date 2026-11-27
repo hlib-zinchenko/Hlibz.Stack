@@ -10,17 +10,17 @@
     <PackageVersion Include="Hlibz.EntityFrameworkCore.ModelRules" Version="2.0.0" />
     <PackageVersion Include="Hlibz.McpDocs.AspNetCore" Version="0.3.0-preview.1" />
     <PackageVersion Include="Hlibz.MinimalApi.Endpoints" Version="2.0.0-preview.1" />
-    <PackageVersion Include="Hlibz.OpenApi.Paging" Version="2.0.0-preview.1" />
-    <PackageVersion Include="Hlibz.OpenApi.Results" Version="2.0.0-preview.1" />
-    <PackageVersion Include="Hlibz.OpenApi.UseCases" Version="2.0.0-preview.1" />
+    <PackageVersion Include="Hlibz.OpenApi.Paging" Version="2.0.0-preview.2" />
+    <PackageVersion Include="Hlibz.OpenApi.Results" Version="2.0.0-preview.2" />
+    <PackageVersion Include="Hlibz.OpenApi.UseCases" Version="2.0.0-preview.2" />
     <PackageVersion Include="Hlibz.Paging" Version="1.1.0" />
     <PackageVersion Include="Hlibz.Paging.EntityFrameworkCore" Version="1.1.0" />
     <PackageVersion Include="Hlibz.Redoc.AspNetCore" Version="2.6.0" />
-    <PackageVersion Include="Hlibz.Results" Version="3.0.0-preview.1" />
-    <PackageVersion Include="Hlibz.Results.AspNetCore" Version="3.0.0-preview.1" />
-    <PackageVersion Include="Hlibz.Results.Mcp" Version="3.0.0-preview.1" />
+    <PackageVersion Include="Hlibz.Results" Version="3.0.0-preview.2" />
+    <PackageVersion Include="Hlibz.Results.AspNetCore" Version="3.0.0-preview.2" />
+    <PackageVersion Include="Hlibz.Results.Mcp" Version="3.0.0-preview.2" />
     <PackageVersion Include="Hlibz.TypeRules.Analyzers" Version="1.0.0" />
-    <PackageVersion Include="Hlibz.UseCases" Version="2.0.0-preview.1" />
+    <PackageVersion Include="Hlibz.UseCases" Version="2.0.0-preview.2" />
   </ItemGroup>
   <ItemGroup>
     <PackageVersion Include="EFCore.NamingConventions" Version="11.0.0" />

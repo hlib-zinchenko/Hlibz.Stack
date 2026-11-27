@@ -10,7 +10,9 @@ namespace Hlibz.Stack.Mcp.Errors;
 /// Which errors each tool can return, from the use case its handler runs (the tool takes the
 /// handler's interface; the catalog names the handler class): the handler's error set,
 /// <see cref="ValidationFailed"/> when the use case validates, <see cref="Forbidden"/> when it's
-/// <see cref="AdminOnlyAttribute">admin only</see>. So the tools declare none themselves.
+/// <see cref="AdminOnlyAttribute">admin only</see>, <see cref="ConcurrencyConflict"/> when the tool
+/// isn't read-only (its save can find the rows changed meanwhile). So the tools declare none
+/// themselves.
 /// </summary>
 /// <param name="useCases">The use cases.</param>
 internal sealed class UseCaseToolErrors(IUseCaseCatalog useCases) : IToolErrorSource
@@ -34,6 +36,11 @@ internal sealed class UseCaseToolErrors(IUseCaseCatalog useCases) : IToolErrorSo
         if (useCase.UseCaseType.IsDefined(typeof(AdminOnlyAttribute), inherit: false))
         {
             errors.Add(typeof(Forbidden));
+        }
+
+        if (tool.ProtocolTool.Annotations?.ReadOnlyHint != true)
+        {
+            errors.Add(typeof(ConcurrencyConflict));
         }
 
         return errors;

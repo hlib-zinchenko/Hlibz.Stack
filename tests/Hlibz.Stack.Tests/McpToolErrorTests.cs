@@ -24,9 +24,10 @@ public sealed class McpToolErrorTests(StackApiFactory api) : IClassFixture<Stack
             error => Assert.False(string.IsNullOrWhiteSpace(error.GetProperty("guidance").GetString()))));
         JsonElement updateItem = Assert.Single(tools, tool => tool.GetProperty("name").GetString() == "update_todo_item");
         Assert.Equal(
-            ["stack_1003", "stack_1004", "stack_1010", "validation_failed"],
-            updateItem.GetProperty("_meta").GetProperty("hlibz/errors").EnumerateArray()
-                .Select(error => error.GetProperty("code").GetString()));
+            ["stack_1003", "stack_1004", "stack_1010", "validation_failed", "concurrency_conflict"],
+            Codes(updateItem));
+        JsonElement getList = Assert.Single(tools, tool => tool.GetProperty("name").GetString() == "get_todo_list");
+        Assert.Equal(["stack_1003"], Codes(getList));
     }
 
     [Fact]
@@ -61,6 +62,29 @@ public sealed class McpToolErrorTests(StackApiFactory api) : IClassFixture<Stack
         Assert.True(result.GetProperty("structuredContent").GetProperty("details").GetProperty("errors")
             .TryGetProperty("title", out _));
     }
+
+    [Fact]
+    public async Task ToolCall_OnAListDeletedMeanwhile_SaysToGetItAgain()
+    {
+        StackClient user = await StackClient.SignUpAsync(api);
+        string listId = StackClient.Id(await user.OkAsync(HttpMethod.Post, "api/todo-lists", new { title = "Groceries" }));
+        await using StackMcpFactory mcp = new(api.Database);
+        mcp.ConcurrentDelete.Arm(listId);
+
+        JsonElement result = await CallAsync(
+            mcp, user, "tools/call", new { name = "rename_todo_list", arguments = new { todoListId = listId, title = "Shopping" } });
+
+        Assert.True(result.GetProperty("isError").GetBoolean());
+        Assert.StartsWith(
+            "concurrency_conflict: The data changed while this call saved it",
+            result.GetProperty("content")[0].GetProperty("text").GetString(),
+            StringComparison.Ordinal);
+        Assert.Equal("concurrency_conflict", result.GetProperty("structuredContent").GetProperty("code").GetString());
+    }
+
+    private static IEnumerable<string?> Codes(JsonElement tool) =>
+        tool.GetProperty("_meta").GetProperty("hlibz/errors").EnumerateArray()
+            .Select(error => error.GetProperty("code").GetString());
 
     // Stateless streamable HTTP: one POST, the answer as a server-sent event.
     private static async Task<JsonElement> CallAsync(StackMcpFactory mcp, StackClient user, string method, object parameters)
