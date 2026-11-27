@@ -5,18 +5,17 @@ internal sealed class DeleteTodoListCommandHandler(
     ITodoListRepository lists,
     IUnitOfWork unitOfWork) : IDeleteTodoListCommandHandler
 {
-    public async Task<Result> HandleAsync(
+    public async Task<Result<Unit, DeleteTodoListError>> HandleAsync(
         DeleteTodoListCommand useCase,
         CancellationToken cancellationToken = default)
     {
-        Result<TodoList> found = await access.GetForChangeAsync(useCase.Id, cancellationToken);
-        if (found is not { IsSuccess: true, Value: { } list })
+        if (await access.FindForChangeAsync(useCase.Id, cancellationToken) is not { } list)
         {
-            return found;
+            return new TodoListNotFound(useCase.Id);
         }
 
         lists.Remove(list);
         await unitOfWork.SaveChangesAsync(cancellationToken);
-        return Result.Success();
+        return Unit.Value;
     }
 }

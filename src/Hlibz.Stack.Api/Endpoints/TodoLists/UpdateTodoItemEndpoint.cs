@@ -8,10 +8,9 @@ internal sealed class UpdateTodoItemEndpoint : IEndpoint<TodoListsEndpointGroup>
 {
     public RouteHandlerBuilder Map(IEndpointRouteBuilder group) =>
         group.MapPatch("{id}/items/{itemId}", HandleAsync)
-            .WithSummary("Changes an item.")
-            .ProducesErrors(StatusCodes.Status404NotFound);
+            .WithSummary("Changes an item.");
 
-    private static Task<Result<TodoItemDto>> HandleAsync(
+    private static Task<Result<TodoItemDto, UpdateTodoItemError>> HandleAsync(
         TodoListId id,
         TodoItemId itemId,
         TodoItemChanges changes,

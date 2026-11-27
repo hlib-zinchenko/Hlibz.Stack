@@ -12,10 +12,9 @@ internal sealed class LogInEndpoint : IEndpoint<AuthEndpointGroup>
 {
     public RouteHandlerBuilder Map(IEndpointRouteBuilder group) =>
         group.MapPost("login", HandleAsync)
-            .WithSummary("Logs in.")
-            .ProducesErrors(StatusCodes.Status401Unauthorized);
+            .WithSummary("Logs in.");
 
-    private static Task<Result<AccessTokenDto>> HandleAsync(
+    private static Task<Result<AccessTokenDto, LogInError>> HandleAsync(
         LogInCommand command,
         [FromServices] ILogInCommandHandler handler,
         CancellationToken cancellationToken) =>

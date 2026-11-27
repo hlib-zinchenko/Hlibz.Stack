@@ -7,23 +7,23 @@ internal sealed class ChangeUserRoleCommandHandler(
     IUserRepository users,
     IUnitOfWork unitOfWork) : IChangeUserRoleCommandHandler
 {
-    public async Task<Result<UserDto>> HandleAsync(
+    public async Task<Result<UserDto, ChangeUserRoleError>> HandleAsync(
         ChangeUserRoleCommand useCase,
         CancellationToken cancellationToken = default)
     {
         Caller caller = await callers.GetRequiredAsync(cancellationToken);
         if (useCase.UserId == caller.Id)
         {
-            return Result<UserDto>.Error(StackErrors.OwnRoleChange);
+            return new OwnRoleChange();
         }
 
         if (await users.GetByIdAsync(useCase.UserId, cancellationToken) is not { } user)
         {
-            return Result<UserDto>.NotFound(StackErrors.UserNotFound);
+            return new UserNotFound(useCase.UserId);
         }
 
         user.ChangeRole(useCase.Change.Role);
         await unitOfWork.SaveChangesAsync(cancellationToken);
-        return Result<UserDto>.Success(UserDto.From(user));
+        return UserDto.From(user);
     }
 }

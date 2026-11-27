@@ -34,14 +34,20 @@ commit the changed OpenAPI documents; CI diffs them.
   use cases share sits at the area's root (`UseCases/TodoLists/TodoListAccess`). DTOs are in
   `Dto/`, read repositories in `ReadRepositories/`. Each use case is a record (`IUseCase`) with its
   DataAnnotations, an `I<Name>Handler` interface (public, what hosts inject) and an internal
-  sealed handler returning `Result`/`Result<T>`. Bodies that sit beside a route id are their own
+  sealed handler returning `Result<T, TError>` (`Unit` for no value), `TError` the use case's
+  error set: `<UseCase>Error.cs`, a `union` of error records, beside it. A use case that can't
+  fail on its own (only validation and authorization, which are ambient) returns `Result<T>`. Bodies that sit beside a route id are their own
   records (`TodoListChanges`). Everything needs a signed-in user unless marked `[Anonymous]`;
   `[AdminOnly]` needs an admin; `AuthorizationFilter` enforces both, reading the role from the
-  database through `ICallerResolver`. A list owner or an admin may manage a list (`Caller.CanManage`);
-  for anyone else it's `404 stack_1003`. List queries take `Page`, `PerPage` (`[Range(1, 100)]`)
+  database through `ICallerResolver`, and fails with the ambient `Unauthorized`/`Forbidden`. A list
+  owner or an admin may manage a list (`Caller.CanManage`); for anyone else it's `TodoListNotFound`
+  (`404 stack_1003`). List queries take `Page`, `PerPage` (`[Range(1, 100)]`)
   and `Sort` (Hlibz.Paging's `[SortableBy(typeof(Dto), NamingPolicy = JsonKnownNamingPolicy.SnakeCaseLower)]`);
   handlers parse sorting with `SortableDto.For<TDto>().Parse(sort)`.
-  Error codes live in `StackErrors` (`stack_10xx`). Read repositories are internal interfaces
+  Errors are `[Error("stack_10xx", ...)]` sealed records with the data a client acts on (ids),
+  in the use case's folder, or at the area's root when several share one (`TodoListNotFound`);
+  the Results generator rejects a reused code. Their messages are for logs: clients branch on
+  codes. Read repositories are internal interfaces
   here, implemented in Infrastructure. No ASP.NET Core or EF Core (CI checks).
 - **Infrastructure**: `StackDbContext` (SQLite, snake_case, ModelRules, ids through
   `EntityIdConverter<TId>`, `DateTimeOffset` stored as a number so SQLite can sort it),
@@ -49,13 +55,29 @@ commit the changed OpenAPI documents; CI diffs them.
   repositories, `JwtAccessTokenIssuer`, `StackDatabase.InitializeAsync` (migrate, then seed from
   `Seed:Users` when there are no users). Migrations in `Database/Migrations` (no analyzers).
 - **Api**: `Hlibz.MinimalApi.Endpoints` classes under `Endpoints/<Area>/`, one per route, calling
-  one handler. The use case is the body where it can be; route ids plus a body record otherwise;
+  one handler and returning its `Result<T, TError>`: `WithResultResponses()` documents the error
+  set and `AddResults()` (Hlibz.OpenApi.Results) each error's body, so no `ProducesErrors`. The use case is the body where it can be; route ids plus a body record otherwise;
   list query strings go through a snake_case `ListParameters` subclass. Admin groups implement
   `IAdminEndpointGroup` (admin document, signed-in only). Two OpenAPI documents, `stack` and
   `admin`, written to `openapi/` on build.
 - **Mcp**: static tool classes under `Tools/`, one tool per use case, ids as `Guid` parameters,
-  failures thrown as `McpException` through `ToolResults`. Stateless HTTP transport, so each tool
-  call reads its own request's token.
+  results unwrapped with Hlibz.Results.Mcp's `ValueOrThrow()`/`ThrowIfFailed()`.
+  `WithToolErrors(StackGuidance.Configure)` turns a failure into `isError` with the error's
+  guidance as text and `{ code, details }` (camelCase) as structured content, and writes each
+  tool's errors into its `_meta` (`hlibz/errors`, the docs page's Errors block). `Errors/`:
+  `StackGuidance`, a template per error type whose `{placeholders}` are the error's details, and
+  `UseCaseToolErrors`, the `IToolErrorSource` that gives each tool its use case's errors (the
+  handler's error set from `IUseCaseCatalog`, plus `validation_failed`/`forbidden`), so the tools
+  declare none. The host doesn't start when an error has no guidance or a placeholder isn't a
+  detail: a new error in a tool's error set needs guidance first; `McpToolErrorTests` start it.
+  Stateless HTTP transport, so each tool call reads its own request's token.
+
+## Packages
+
+The Hlibz .NET 11 majors (Hlibz.Results 3, Hlibz.UseCases 2, Hlibz.OpenApi 2,
+Hlibz.MinimalApi.Endpoints 2) aren't on nuget.org yet: `NuGet.config` reads them from the local
+folder feed `~/LocalNuGet`, where each repository's `dotnet pack` output is copied. CI can't
+restore until they ship.
 
 ## Code style
 

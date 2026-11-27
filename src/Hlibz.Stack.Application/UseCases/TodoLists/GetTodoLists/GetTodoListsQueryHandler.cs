@@ -14,14 +14,14 @@ internal sealed class GetTodoListsQueryHandler(ICallerResolver callers, ITodoLis
         UserId ownerId = useCase.OwnerId ?? caller.Id;
         if (!caller.CanManage(ownerId))
         {
-            return Result<PagedData<TodoListDto>>.Forbidden();
+            return new Forbidden();
         }
 
-        return Result<PagedData<TodoListDto>>.Success(await lists.GetPageAsync(
+        return await lists.GetPageAsync(
             ownerId,
             useCase.Search,
             SortableDto.For<TodoListDto>().Parse(useCase.Sort),
             new PagingParams(useCase.Page, useCase.PerPage),
-            cancellationToken));
+            cancellationToken);
     }
 }

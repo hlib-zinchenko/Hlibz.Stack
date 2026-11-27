@@ -8,14 +8,17 @@ namespace Hlibz.Stack.Application.UseCases.TodoLists;
 /// <param name="lists">Loads the list.</param>
 internal sealed class TodoListAccess(ICallerResolver callers, ITodoListRepository lists)
 {
-    public async Task<Result<TodoList>> GetForChangeAsync(
+    /// <summary>Loads the list, when the caller may change it.</summary>
+    /// <param name="id">The list's id.</param>
+    /// <param name="cancellationToken">Cancels the lookup.</param>
+    /// <returns>The list; <see langword="null"/> when there's none the caller may change: fail
+    /// with <see cref="TodoListNotFound"/>.</returns>
+    public async Task<TodoList?> FindForChangeAsync(
         TodoListId id,
         CancellationToken cancellationToken)
     {
         Caller caller = await callers.GetRequiredAsync(cancellationToken);
         TodoList? list = await lists.GetByIdAsync(id, cancellationToken);
-        return list is not null && caller.CanManage(list.OwnerId)
-            ? Result<TodoList>.Success(list)
-            : Result<TodoList>.NotFound(StackErrors.TodoListNotFound);
+        return list is not null && caller.CanManage(list.OwnerId) ? list : null;
     }
 }

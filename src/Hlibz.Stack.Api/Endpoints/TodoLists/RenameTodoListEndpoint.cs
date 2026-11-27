@@ -8,10 +8,9 @@ internal sealed class RenameTodoListEndpoint : IEndpoint<TodoListsEndpointGroup>
 {
     public RouteHandlerBuilder Map(IEndpointRouteBuilder group) =>
         group.MapPut("{id}", HandleAsync)
-            .WithSummary("Renames a todo list.")
-            .ProducesErrors(StatusCodes.Status404NotFound);
+            .WithSummary("Renames a todo list.");
 
-    private static Task<Result<TodoListDetailDto>> HandleAsync(
+    private static Task<Result<TodoListDetailDto, RenameTodoListError>> HandleAsync(
         TodoListId id,
         TodoListChanges changes,
         [FromServices] IRenameTodoListCommandHandler handler,

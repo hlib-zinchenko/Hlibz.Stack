@@ -30,6 +30,7 @@
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" />
     <PackageReference Include="Hlibz.MinimalApi.Endpoints" />
     <PackageReference Include="Hlibz.OpenApi.Paging" />
+    <PackageReference Include="Hlibz.OpenApi.Results" />
     <PackageReference Include="Hlibz.OpenApi.UseCases" />
     <PackageReference Include="Hlibz.Redoc.AspNetCore" />
     <PackageReference Include="Hlibz.Results.AspNetCore" />

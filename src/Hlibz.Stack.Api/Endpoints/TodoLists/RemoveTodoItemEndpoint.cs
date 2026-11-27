@@ -7,10 +7,9 @@ internal sealed class RemoveTodoItemEndpoint : IEndpoint<TodoListsEndpointGroup>
 {
     public RouteHandlerBuilder Map(IEndpointRouteBuilder group) =>
         group.MapDelete("{id}/items/{itemId}", HandleAsync)
-            .WithSummary("Removes an item.")
-            .ProducesErrors(StatusCodes.Status404NotFound);
+            .WithSummary("Removes an item.");
 
-    private static Task<Result> HandleAsync(
+    private static Task<Result<Unit, RemoveTodoItemError>> HandleAsync(
         TodoListId id,
         TodoItemId itemId,
         [FromServices] IRemoveTodoItemCommandHandler handler,

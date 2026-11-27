@@ -7,7 +7,7 @@ internal sealed class LogInCommandHandler(
     PasswordHasher passwords,
     IAccessTokenIssuer tokens) : ILogInCommandHandler
 {
-    public async Task<Result<AccessTokenDto>> HandleAsync(
+    public async Task<Result<AccessTokenDto, LogInError>> HandleAsync(
         LogInCommand useCase,
         CancellationToken cancellationToken = default)
     {
@@ -15,7 +15,7 @@ internal sealed class LogInCommandHandler(
 
         // Verified even without a user, so the time taken doesn't say whether the address exists.
         return passwords.Verify(user?.PasswordHash, useCase.Password) && user is not null
-            ? Result<AccessTokenDto>.Success(tokens.Issue(user))
-            : Result<AccessTokenDto>.Unauthorized(StackErrors.InvalidCredentials);
+            ? tokens.Issue(user)
+            : new InvalidCredentials();
     }
 }

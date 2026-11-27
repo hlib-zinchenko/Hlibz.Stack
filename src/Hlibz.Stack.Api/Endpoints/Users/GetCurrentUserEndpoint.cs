@@ -8,10 +8,9 @@ internal sealed class GetCurrentUserEndpoint : IEndpoint<UsersEndpointGroup>
 {
     public RouteHandlerBuilder Map(IEndpointRouteBuilder group) =>
         group.MapGet("me", HandleAsync)
-            .WithSummary("Gets you.")
-            .ProducesErrors(StatusCodes.Status404NotFound);
+            .WithSummary("Gets you.");
 
-    private static Task<Result<UserDto>> HandleAsync(
+    private static Task<Result<UserDto, GetCurrentUserError>> HandleAsync(
         [FromServices] IGetCurrentUserQueryHandler handler,
         CancellationToken cancellationToken) =>
         handler.HandleAsync(new GetCurrentUserQuery(), cancellationToken);

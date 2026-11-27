@@ -39,7 +39,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
+                  "$ref": "#/components/schemas/InvalidCredentialsErrorResponse"
                 }
               }
             }
@@ -91,7 +91,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
+                  "$ref": "#/components/schemas/EmailTakenErrorResponse"
                 }
               }
             }
@@ -174,7 +174,31 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
+                  "$ref": "#/components/schemas/TodoListNotFoundErrorResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "$ref": "#/components/schemas/TodoItemTitleTakenErrorResponse"
+                    },
+                    {
+                      "$ref": "#/components/schemas/TodoListFullErrorResponse"
+                    }
+                  ],
+                  "discriminator": {
+                    "propertyName": "code",
+                    "mapping": {
+                      "stack_1010": "#/components/schemas/TodoItemTitleTakenErrorResponse",
+                      "stack_1009": "#/components/schemas/TodoListFullErrorResponse"
+                    }
+                  }
                 }
               }
             }
@@ -242,6 +266,30 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "$ref": "#/components/schemas/TodoListTitleTakenErrorResponse"
+                    },
+                    {
+                      "$ref": "#/components/schemas/TodoListLimitReachedErrorResponse"
+                    }
+                  ],
+                  "discriminator": {
+                    "propertyName": "code",
+                    "mapping": {
+                      "stack_1007": "#/components/schemas/TodoListTitleTakenErrorResponse",
+                      "stack_1008": "#/components/schemas/TodoListLimitReachedErrorResponse"
+                    }
+                  }
                 }
               }
             }
@@ -419,7 +467,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
+                  "$ref": "#/components/schemas/TodoListNotFoundErrorResponse"
                 }
               }
             }
@@ -485,7 +533,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
+                  "$ref": "#/components/schemas/TodoListNotFoundErrorResponse"
                 }
               }
             }
@@ -561,7 +609,17 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
+                  "$ref": "#/components/schemas/TodoListNotFoundErrorResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TodoListTitleTakenErrorResponse"
                 }
               }
             }
@@ -641,7 +699,21 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
+                  "oneOf": [
+                    {
+                      "$ref": "#/components/schemas/TodoListNotFoundErrorResponse"
+                    },
+                    {
+                      "$ref": "#/components/schemas/TodoItemNotFoundErrorResponse"
+                    }
+                  ],
+                  "discriminator": {
+                    "propertyName": "code",
+                    "mapping": {
+                      "stack_1003": "#/components/schemas/TodoListNotFoundErrorResponse",
+                      "stack_1004": "#/components/schemas/TodoItemNotFoundErrorResponse"
+                    }
+                  }
                 }
               }
             }
@@ -726,7 +798,31 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
+                  "oneOf": [
+                    {
+                      "$ref": "#/components/schemas/TodoListNotFoundErrorResponse"
+                    },
+                    {
+                      "$ref": "#/components/schemas/TodoItemNotFoundErrorResponse"
+                    }
+                  ],
+                  "discriminator": {
+                    "propertyName": "code",
+                    "mapping": {
+                      "stack_1003": "#/components/schemas/TodoListNotFoundErrorResponse",
+                      "stack_1004": "#/components/schemas/TodoItemNotFoundErrorResponse"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TodoItemTitleTakenErrorResponse"
                 }
               }
             }
@@ -793,7 +889,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
+                  "$ref": "#/components/schemas/UserNotFoundErrorResponse"
                 }
               }
             }
@@ -842,6 +938,28 @@
         },
         "description": "Creates an empty todo list for the signed-in user."
       },
+      "EmailTakenErrorResponse": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/ErrorResponse"
+          },
+          {
+            "required": [
+              "code"
+            ],
+            "type": "object",
+            "properties": {
+              "code": {
+                "enum": [
+                  "stack_1001"
+                ],
+                "type": "string"
+              }
+            }
+          }
+        ],
+        "description": "Someone already signed up with this email address."
+      },
       "ErrorResponse": {
         "required": [
           "message",
@@ -872,9 +990,34 @@
               }
             },
             "description": "The validation failures of a 400, keyed by the offending field, each with its messages; left out of every other error."
+          },
+          "details": {
+            "description": "The error's own data (the error record, e.g. the ids of what blocks a delete), so a client can act on the failure without another request; left out of an error without any."
           }
         },
         "description": "The body of every error response (400, 401, 403, 404, 409, 429, ...)."
+      },
+      "InvalidCredentialsErrorResponse": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/ErrorResponse"
+          },
+          {
+            "required": [
+              "code"
+            ],
+            "type": "object",
+            "properties": {
+              "code": {
+                "enum": [
+                  "stack_1002"
+                ],
+                "type": "string"
+              }
+            }
+          }
+        ],
+        "description": "The email address or password is wrong."
       },
       "LogInCommand": {
         "required": [
@@ -1091,6 +1234,86 @@
         "description": "The id of an item on a todo list.",
         "format": "uuid"
       },
+      "TodoItemNotFound": {
+        "required": [
+          "item_id"
+        ],
+        "type": "object",
+        "properties": {
+          "item_id": {
+            "type": "string",
+            "description": "The id of an item on a todo list.",
+            "format": "uuid"
+          }
+        },
+        "description": "The todo list has no item with the id."
+      },
+      "TodoItemNotFoundErrorResponse": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/ErrorResponse"
+          },
+          {
+            "required": [
+              "code",
+              "details"
+            ],
+            "type": "object",
+            "properties": {
+              "code": {
+                "enum": [
+                  "stack_1004"
+                ],
+                "type": "string"
+              },
+              "details": {
+                "$ref": "#/components/schemas/TodoItemNotFound"
+              }
+            }
+          }
+        ],
+        "description": "The todo list has no item with this id."
+      },
+      "TodoItemTitleTaken": {
+        "required": [
+          "item_id"
+        ],
+        "type": "object",
+        "properties": {
+          "item_id": {
+            "type": "string",
+            "description": "The id of an item on a todo list.",
+            "format": "uuid"
+          }
+        },
+        "description": "The todo list already has an item with the title."
+      },
+      "TodoItemTitleTakenErrorResponse": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/ErrorResponse"
+          },
+          {
+            "required": [
+              "code",
+              "details"
+            ],
+            "type": "object",
+            "properties": {
+              "code": {
+                "enum": [
+                  "stack_1010"
+                ],
+                "type": "string"
+              },
+              "details": {
+                "$ref": "#/components/schemas/TodoItemTitleTaken"
+              }
+            }
+          }
+        ],
+        "description": "The todo list already has an item with this title."
+      },
       "TodoListChanges": {
         "required": [
           "title"
@@ -1209,10 +1432,178 @@
         },
         "description": "A todo list in a list of them: its counts, not its items."
       },
+      "TodoListFull": {
+        "required": [
+          "max_items"
+        ],
+        "type": "object",
+        "properties": {
+          "max_items": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "description": "How many items a list holds.",
+            "format": "int32"
+          }
+        },
+        "description": "The todo list holds as many items as it can: remove one first."
+      },
+      "TodoListFullErrorResponse": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/ErrorResponse"
+          },
+          {
+            "required": [
+              "code",
+              "details"
+            ],
+            "type": "object",
+            "properties": {
+              "code": {
+                "enum": [
+                  "stack_1009"
+                ],
+                "type": "string"
+              },
+              "details": {
+                "$ref": "#/components/schemas/TodoListFull"
+              }
+            }
+          }
+        ],
+        "description": "The todo list holds as many items as it can."
+      },
       "TodoListId": {
         "type": "string",
         "description": "The id of a todo list.",
         "format": "uuid"
+      },
+      "TodoListLimitReached": {
+        "required": [
+          "max_todo_lists"
+        ],
+        "type": "object",
+        "properties": {
+          "max_todo_lists": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "description": "How many todo lists a user may have.",
+            "format": "int32"
+          }
+        },
+        "description": "The user has as many todo lists as they may: delete one first."
+      },
+      "TodoListLimitReachedErrorResponse": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/ErrorResponse"
+          },
+          {
+            "required": [
+              "code",
+              "details"
+            ],
+            "type": "object",
+            "properties": {
+              "code": {
+                "enum": [
+                  "stack_1008"
+                ],
+                "type": "string"
+              },
+              "details": {
+                "$ref": "#/components/schemas/TodoListLimitReached"
+              }
+            }
+          }
+        ],
+        "description": "The user has as many todo lists as they may."
+      },
+      "TodoListNotFound": {
+        "required": [
+          "todo_list_id"
+        ],
+        "type": "object",
+        "properties": {
+          "todo_list_id": {
+            "type": "string",
+            "description": "The id of a todo list.",
+            "format": "uuid"
+          }
+        },
+        "description": "No todo list with the id is visible to the caller: someone else's list is not found either."
+      },
+      "TodoListNotFoundErrorResponse": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/ErrorResponse"
+          },
+          {
+            "required": [
+              "code",
+              "details"
+            ],
+            "type": "object",
+            "properties": {
+              "code": {
+                "enum": [
+                  "stack_1003"
+                ],
+                "type": "string"
+              },
+              "details": {
+                "$ref": "#/components/schemas/TodoListNotFound"
+              }
+            }
+          }
+        ],
+        "description": "There's no todo list with this id."
+      },
+      "TodoListTitleTaken": {
+        "required": [
+          "todo_list_id"
+        ],
+        "type": "object",
+        "properties": {
+          "todo_list_id": {
+            "type": "string",
+            "description": "The id of a todo list.",
+            "format": "uuid"
+          }
+        },
+        "description": "The list's owner already has a todo list with the title."
+      },
+      "TodoListTitleTakenErrorResponse": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/ErrorResponse"
+          },
+          {
+            "required": [
+              "code",
+              "details"
+            ],
+            "type": "object",
+            "properties": {
+              "code": {
+                "enum": [
+                  "stack_1007"
+                ],
+                "type": "string"
+              },
+              "details": {
+                "$ref": "#/components/schemas/TodoListTitleTaken"
+              }
+            }
+          }
+        ],
+        "description": "The owner already has a todo list with this title."
       },
       "UserDto": {
         "required": [
@@ -1252,6 +1643,46 @@
         "type": "string",
         "description": "The id of a user.",
         "format": "uuid"
+      },
+      "UserNotFound": {
+        "required": [
+          "user_id"
+        ],
+        "type": "object",
+        "properties": {
+          "user_id": {
+            "type": "string",
+            "description": "The id of a user.",
+            "format": "uuid"
+          }
+        },
+        "description": "No user has the id."
+      },
+      "UserNotFoundErrorResponse": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/ErrorResponse"
+          },
+          {
+            "required": [
+              "code",
+              "details"
+            ],
+            "type": "object",
+            "properties": {
+              "code": {
+                "enum": [
+                  "stack_1005"
+                ],
+                "type": "string"
+              },
+              "details": {
+                "$ref": "#/components/schemas/UserNotFound"
+              }
+            }
+          }
+        ],
+        "description": "There's no user with this id."
       }
     },
     "securitySchemes": {

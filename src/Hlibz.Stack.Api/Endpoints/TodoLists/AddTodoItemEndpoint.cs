@@ -8,10 +8,9 @@ internal sealed class AddTodoItemEndpoint : IEndpoint<TodoListsEndpointGroup>
 {
     public RouteHandlerBuilder Map(IEndpointRouteBuilder group) =>
         group.MapPost("{id}/items", HandleAsync)
-            .WithSummary("Adds an item.")
-            .ProducesErrors(StatusCodes.Status404NotFound);
+            .WithSummary("Adds an item.");
 
-    private static Task<Result<TodoItemDto>> HandleAsync(
+    private static Task<Result<TodoItemDto, AddTodoItemError>> HandleAsync(
         TodoListId id,
         NewTodoItem item,
         [FromServices] IAddTodoItemCommandHandler handler,

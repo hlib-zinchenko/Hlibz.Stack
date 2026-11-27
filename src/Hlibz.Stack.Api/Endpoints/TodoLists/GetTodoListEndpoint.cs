@@ -8,10 +8,9 @@ internal sealed class GetTodoListEndpoint : IEndpoint<TodoListsEndpointGroup>
 {
     public RouteHandlerBuilder Map(IEndpointRouteBuilder group) =>
         group.MapGet("{id}", HandleAsync)
-            .WithSummary("Gets a todo list.")
-            .ProducesErrors(StatusCodes.Status404NotFound);
+            .WithSummary("Gets a todo list.");
 
-    private static Task<Result<TodoListDetailDto>> HandleAsync(
+    private static Task<Result<TodoListDetailDto, GetTodoListError>> HandleAsync(
         TodoListId id,
         [FromServices] IGetTodoListQueryHandler handler,
         CancellationToken cancellationToken) =>

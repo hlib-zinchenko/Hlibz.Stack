@@ -8,10 +8,9 @@ internal sealed class RegisterEndpoint : IEndpoint<AuthEndpointGroup>
 {
     public RouteHandlerBuilder Map(IEndpointRouteBuilder group) =>
         group.MapPost("register", HandleAsync)
-            .WithSummary("Signs up.")
-            .ProducesErrors(StatusCodes.Status409Conflict);
+            .WithSummary("Signs up.");
 
-    private static Task<Result<UserDto>> HandleAsync(
+    private static Task<Result<UserDto, RegisterUserError>> HandleAsync(
         RegisterUserCommand command,
         [FromServices] IRegisterUserCommandHandler handler,
         CancellationToken cancellationToken) =>

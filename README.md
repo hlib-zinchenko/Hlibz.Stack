@@ -19,19 +19,23 @@ Hlibz.Stack.Mcp             MCP: the same use cases as tools, a docs page      h
 | Package | Where | What it does here |
 |---|---|---|
 | [Hlibz.UseCases](https://www.nuget.org/packages/Hlibz.UseCases) | Application | Use case contracts, handlers registered without scanning, a pipeline that validates DataAnnotations and runs the authorization filter in both hosts |
-| [Hlibz.Results](https://www.nuget.org/packages/Hlibz.Results) | Core | Every use case returns a `Result`; failures carry error codes (`stack_10xx`) |
+| [Hlibz.Results](https://www.nuget.org/packages/Hlibz.Results) | Core, Application | Every use case returns a `Result`; one that can fail declares how as an error set, `Result<T, TError>` with `TError` a `union` of error records (`stack_10xx`), next to the use case |
 | [Hlibz.Paging](https://www.nuget.org/packages/Hlibz.Paging) (+ `.EntityFrameworkCore`) | Application, Infrastructure | `[Sortable]` DTOs, sort strings checked by the use case through `[SortableBy]`, `PaginateAsync` |
 | [Hlibz.EntityFrameworkCore.ModelRules](https://www.nuget.org/packages/Hlibz.EntityFrameworkCore.ModelRules) | Infrastructure | snake_case, max lengths, enums as strings, no shadow properties; a test verifies the model |
-| [Hlibz.MinimalApi.Endpoints](https://www.nuget.org/packages/Hlibz.MinimalApi.Endpoints) | Api | One class per endpoint, groups, documented errors |
-| [Hlibz.Results.AspNetCore](https://www.nuget.org/packages/Hlibz.Results.AspNetCore) | Api | `Result` → HTTP, one `ErrorResponse` body for every failure |
-| [Hlibz.OpenApi.AspNetCore](https://www.nuget.org/packages/Hlibz.OpenApi.AspNetCore) + [Hlibz.OpenApi.UseCases](https://www.nuget.org/packages/Hlibz.OpenApi.UseCases) + [Hlibz.OpenApi.Paging](https://www.nuget.org/packages/Hlibz.OpenApi.Paging) | Api | Strongly-typed ids as `uuid` components, XML docs, bearer security, the use cases' rules and `400`s, what each sort string sorts by and its default |
+| [Hlibz.MinimalApi.Endpoints](https://www.nuget.org/packages/Hlibz.MinimalApi.Endpoints) | Api | One class per endpoint, groups, the auth gate's `401`/`403` documented |
+| [Hlibz.Results.AspNetCore](https://www.nuget.org/packages/Hlibz.Results.AspNetCore) | Api | `Result` → HTTP, one `ErrorResponse` body for every failure, each endpoint's declared errors documented from its handler's error set |
+| [Hlibz.OpenApi.AspNetCore](https://www.nuget.org/packages/Hlibz.OpenApi.AspNetCore) + [Hlibz.OpenApi.UseCases](https://www.nuget.org/packages/Hlibz.OpenApi.UseCases) + [Hlibz.OpenApi.Paging](https://www.nuget.org/packages/Hlibz.OpenApi.Paging) + [Hlibz.OpenApi.Results](https://www.nuget.org/packages/Hlibz.OpenApi.Results) | Api | Strongly-typed ids as `uuid` components, XML docs, bearer security, the use cases' rules and `400`s, what each sort string sorts by and its default, each declared error's own body (its code and details; a `oneOf` where a status has two) |
 | [Hlibz.Redoc.AspNetCore](https://www.nuget.org/packages/Hlibz.Redoc.AspNetCore) | Api | ReDoc at `/api-docs`, an app and an admin document |
-| [Hlibz.McpDocs.AspNetCore](https://www.nuget.org/packages/Hlibz.McpDocs.AspNetCore) | Mcp | The MCP server's docs page at `/mcp-docs` |
+| [Hlibz.Results.Mcp](https://www.nuget.org/packages/Hlibz.Results.Mcp) | Mcp | A failed tool returns `isError` with guidance (what to do next) and `{ code, details }`; each tool lists its errors in `_meta`; the host doesn't start while an error has no guidance |
+| [Hlibz.McpDocs.AspNetCore](https://www.nuget.org/packages/Hlibz.McpDocs.AspNetCore) | Mcp | The MCP server's docs page at `/mcp-docs`, with each tool's errors and their guidance |
 | [Hlibz.TypeRules.Analyzers](https://www.nuget.org/packages/Hlibz.TypeRules.Analyzers) | everywhere | Endpoints, handlers, use cases, entities and ids keep their shapes (`.editorconfig`) |
 
 ## Run it
 
-Requires the .NET 11 SDK. Each host migrates the SQLite database (`.data/stack.db`, shared by
+Requires the .NET 11 SDK, and the Hlibz .NET 11 majors (Hlibz.Results 3 with the new
+Hlibz.Results.Mcp, Hlibz.UseCases 2, Hlibz.OpenApi 2, Hlibz.MinimalApi.Endpoints 2) and
+Hlibz.McpDocs.AspNetCore 0.3 packed into `~/LocalNuGet`: they aren't on
+nuget.org yet, and `NuGet.config` reads them from there. Each host migrates the SQLite database (`.data/stack.db`, shared by
 both) when it starts, and seeds two users in Development:
 
 | Email | Password | Role |
@@ -59,14 +63,51 @@ Delete `.data/stack.db` to start over.
 ## How a call goes
 
 ```text
-HTTP endpoint ─┐                                    ┌─ validation (DataAnnotations on the use case)
-               ├─ I<UseCase>Handler.HandleAsync ────┼─ AuthorizationFilter ([Anonymous], [AdminOnly])
-MCP tool ──────┘                                    └─ the handler → Result
+HTTP endpoint ─┐                                    ┌─ validation (DataAnnotations) → ValidationFailed
+               ├─ I<UseCase>Handler.HandleAsync ────┼─ AuthorizationFilter → Unauthorized, Forbidden
+MCP tool ──────┘                                    └─ the handler → Result<T, TError>
 ```
 
 Clients never check anything themselves: a blank title, an unknown sort key, a user calling an
 admin use case, or someone else's list fail the same way in both hosts. The caller's role is read
 from the database on each call, not from the token, so a role change applies at once.
+
+A use case's errors are its own: `UpdateTodoItemError(TodoListNotFound, TodoItemNotFound)` is
+what its handler may fail with, and the compiler holds it to that. The layers around it add the
+ambient errors (`validation_failed`, `unauthorized`, `forbidden`). Each error carries the data a
+client acts on (`TodoListNotFound` its `todo_list_id`), and its message is for logs, not for end
+users: clients branch on the code.
+
+## Errors to try
+
+Every failure has the same body: `code` to branch on, `message` for logs, and `details` with what
+the client needs to act on (when the error has any). The documents at `/api-docs` show each
+endpoint's errors with their own bodies.
+
+| Code | Status | When | Details |
+|---|---|---|---|
+| `stack_1001` | 409 | Signing up with an email address someone has | |
+| `stack_1002` | 401 | Logging in with a wrong email address or password | |
+| `stack_1003` | 404 | A todo list that doesn't exist, or is someone else's | `todo_list_id` |
+| `stack_1004` | 404 | An item that isn't on the list | `item_id` |
+| `stack_1005` | 404 | A user that doesn't exist | `user_id` |
+| `stack_1006` | 400 | An admin changing their own role | |
+| `stack_1007` | 409 | Creating or renaming a list to a title the owner has (ignoring case) | `todo_list_id`: the list that has it |
+| `stack_1008` | 409 | Creating an 11th list | `max_todo_lists` |
+| `stack_1009` | 409 | Adding a 21st item to a list | `max_items` |
+| `stack_1010` | 409 | Adding or renaming an item to a title on the list (ignoring case) | `item_id`: the item that has it |
+| `validation_failed` | 400 | A blank title, an unknown sort key, ... | `validation_errors` |
+| `unauthorized` | 401 | No access token, or an expired one | |
+| `forbidden` | 403 | A user calling an admin endpoint, or another user's lists | |
+
+Over MCP a failed tool returns `isError` with guidance instead of the message: what to do next,
+in terms of the server's tools, with the details filled in (`stack_1003: No todo list with id … is
+visible to you … Call list_todo_lists to find the list's id.`), and `{ code, details }` as
+`structuredContent` for programs. Each tool lists the errors it can return, with their guidance, in
+its `_meta` under `hlibz/errors` (Hlibz.Results.Mcp); the docs page at `/mcp-docs` lists them on
+each tool under **Errors**, and `catalog.md` as a table. The guidance texts are the host's own
+(`Errors/StackGuidance.cs`), and each tool's errors come from the use case it runs
+(`Errors/UseCaseToolErrors.cs`).
 
 ## Working on it
 
@@ -93,4 +134,19 @@ What this repository is for: places where the packages don't yet fit together sm
 - **Admin tools are listed for everyone.** Roles live in the database, not in token claims, so
   `[Authorize(Roles = ...)]` (and McpDocs' per-viewer filtering) can't hide them; the use cases
   answer non-admins with Forbidden.
-- **Validation messages use C# names** (`The Title field is required.`) under snake_case keys.
+- **Validation messages use C# names** (`The Title field is required.`) under snake_case keys
+  (camelCase over MCP): the keys are converted, the messages DataAnnotations writes aren't.
+- **MCP tools can't return a `Result`.** The MCP SDK serializes a tool's return value before any
+  filter sees it, so every tool unwraps with `ValueOrThrow()` and the failure travels as an
+  exception (Hlibz.Results.Mcp's filter catches it).
+- **A tool's errors come from reflection over the tools.** MCP's `McpServerTool` doesn't expose the
+  method, so `UseCaseToolErrors` finds each tool's method by name to match its handler parameter
+  to a use case. Generic enough for a Hlibz.UseCases + MCP package, once a second app needs it.
+- **The use case catalog names handler classes.** `UseCaseDescriptor.HandlerType` is the internal
+  handler, not the `I…Handler` a host injects, so a host matches by `IsAssignableFrom`.
+- **Errors a handler returns on its own are invisible.** `GetTodoLists` returns `Forbidden` for
+  another user's lists; it's ambient, so no error set or attribute says so, and
+  `admin_list_user_todo_lists` doesn't list it.
+- **`403` on every signed-in endpoint.** Hlibz.MinimalApi.Endpoints documents `401`/`403` from
+  `RequireAuthorization()`; only the use cases know which can be forbidden (`[AdminOnly]`, another
+  user's lists), so `GET api/users/me` shows a `403` it never returns.

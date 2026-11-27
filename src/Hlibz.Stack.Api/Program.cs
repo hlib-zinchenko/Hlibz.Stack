@@ -45,7 +45,8 @@ builder.Services.ConfigureHttpJsonOptions(options =>
     options.SerializerOptions.Converters.Add(new JsonStringEnumConverter());
 });
 
-// One error body (ErrorResponse) for every failure: a use case's, validation's, and the auth gate's.
+// One error body (ErrorResponse) for every failure: a use case's declared errors, validation's, and
+// the auth gate's. Each declared error is documented with its own code and details (AddResults).
 builder.Services.AddResultErrorResponses();
 
 // One document for the app, one for the admin endpoints; Microsoft.AspNetCore.OpenApi builds a
@@ -69,7 +70,8 @@ app.UseAuthorization();
 app.UseOutputCache();
 app.MapOpenApi().CacheOutput();
 
-// Every endpoint returns its use case's Result as is; ErrorResponse is the documented error body.
+// Every endpoint returns its use case's Result as is. WithResultResponses documents the errors its
+// handler's error set declares; Endpoints adds 401/403 where a group requires authorization.
 app.MapEndpoints(typeof(Program).Assembly, options => options
     .UseErrorResponse<ErrorResponse>()
     .ConfigureGroups(group => group.Builder.WithGroupName(
@@ -86,6 +88,8 @@ app.MapReDocDocuments(
     {
         docs.DefaultColorMode = ReDocColorMode.System;
         docs.AdditionalConfigJson = """{ "showExtensions": ["x-rules"] }""";
+        docs.EnableTryIt();
+        docs.PickerPlacement = ReDocToolbarPlacement.Sidebar;
     });
 app.MapGet("/", () => Results.Redirect("/api-docs")).ExcludeFromDescription();
 
@@ -100,6 +104,7 @@ static void ConfigureDocument(OpenApiOptions options) => options
     .AddXmlDocumentation()
     .AddOpenApiRules()
     .AddUseCases(useCases => useCases.ValidationResponseType = typeof(ErrorResponse))
+    .AddResults()
     .AddPaging()
     .AddDescriptionCleanup()
     .AddBearerSecurity(bearer => bearer.Description =

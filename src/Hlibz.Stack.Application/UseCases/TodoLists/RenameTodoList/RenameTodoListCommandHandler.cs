@@ -2,21 +2,30 @@ using Hlibz.Stack.Application.Dto;
 
 namespace Hlibz.Stack.Application.UseCases.TodoLists.RenameTodoList;
 
-internal sealed class RenameTodoListCommandHandler(TodoListAccess access, IUnitOfWork unitOfWork)
+internal sealed class RenameTodoListCommandHandler(
+    TodoListAccess access,
+    ITodoListRepository lists,
+    IUnitOfWork unitOfWork)
     : IRenameTodoListCommandHandler
 {
-    public async Task<Result<TodoListDetailDto>> HandleAsync(
+    public async Task<Result<TodoListDetailDto, RenameTodoListError>> HandleAsync(
         RenameTodoListCommand useCase,
         CancellationToken cancellationToken = default)
     {
-        Result<TodoList> found = await access.GetForChangeAsync(useCase.Id, cancellationToken);
-        if (found is not { IsSuccess: true, Value: { } list })
+        if (await access.FindForChangeAsync(useCase.Id, cancellationToken) is not { } list)
         {
-            return Result<TodoListDetailDto>.FromFailed(found);
+            return new TodoListNotFound(useCase.Id);
+        }
+
+        // The owner's other lists: an admin renaming someone's list keeps the owner's titles apart.
+        if (await lists.FindIdByTitleAsync(list.OwnerId, useCase.Changes.Title, cancellationToken) is { } takenBy
+            && takenBy != list.Id)
+        {
+            return new TodoListTitleTaken(takenBy);
         }
 
         list.Rename(useCase.Changes.Title);
         await unitOfWork.SaveChangesAsync(cancellationToken);
-        return Result<TodoListDetailDto>.Success(TodoListDetailDto.From(list));
+        return TodoListDetailDto.From(list);
     }
 }

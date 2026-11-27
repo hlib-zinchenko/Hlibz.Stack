@@ -8,10 +8,9 @@ internal sealed class ChangeUserRoleEndpoint : IEndpoint<AdminUsersEndpointGroup
 {
     public RouteHandlerBuilder Map(IEndpointRouteBuilder group) =>
         group.MapPut("{userId}/role", HandleAsync)
-            .WithSummary("Changes a user's role.")
-            .ProducesErrors(StatusCodes.Status404NotFound);
+            .WithSummary("Changes a user's role.");
 
-    private static Task<Result<UserDto>> HandleAsync(
+    private static Task<Result<UserDto, ChangeUserRoleError>> HandleAsync(
         UserId userId,
         UserRoleChange change,
         [FromServices] IChangeUserRoleCommandHandler handler,

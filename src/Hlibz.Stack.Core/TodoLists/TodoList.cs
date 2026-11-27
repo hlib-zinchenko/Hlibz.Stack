@@ -9,6 +9,12 @@ public sealed class TodoList : Entity<TodoListId>
     /// <summary>The longest title.</summary>
     public const int TitleMaxLength = 100;
 
+    /// <summary>The most todo lists one user may have.</summary>
+    public const int MaxPerOwner = 10;
+
+    /// <summary>The most items a list holds.</summary>
+    public const int MaxItems = 20;
+
     private readonly List<TodoItem> _items = [];
 
     private TodoList(TodoListId id, UserId ownerId, string title)
@@ -53,6 +59,12 @@ public sealed class TodoList : Entity<TodoListId>
     /// <param name="itemId">The item's id.</param>
     /// <returns>The item; <see langword="null"/> when it isn't on this list.</returns>
     public TodoItem? FindItem(TodoItemId itemId) => _items.Find(item => item.Id == itemId);
+
+    /// <summary>Finds an item on the list by its title, ignoring case and surrounding spaces.</summary>
+    /// <param name="title">The title.</param>
+    /// <returns>The item; <see langword="null"/> when no item has that title.</returns>
+    public TodoItem? FindItemByTitle(string title) =>
+        _items.Find(item => string.Equals(item.Title, title.Trim(), StringComparison.OrdinalIgnoreCase));
 
     /// <summary>Takes an item off the list.</summary>
     /// <param name="item">The item.</param>

@@ -45,6 +45,16 @@
               }
             }
           },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OwnRoleChangeErrorResponse"
+                }
+              }
+            }
+          },
           "401": {
             "description": "Unauthorized",
             "content": {
@@ -70,17 +80,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "The request didn't pass validation.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
+                  "$ref": "#/components/schemas/UserNotFoundErrorResponse"
                 }
               }
             }
@@ -353,9 +353,34 @@
               }
             },
             "description": "The validation failures of a 400, keyed by the offending field, each with its messages; left out of every other error."
+          },
+          "details": {
+            "description": "The error's own data (the error record, e.g. the ids of what blocks a delete), so a client can act on the failure without another request; left out of an error without any."
           }
         },
         "description": "The body of every error response (400, 401, 403, 404, 409, 429, ...)."
+      },
+      "OwnRoleChangeErrorResponse": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/ErrorResponse"
+          },
+          {
+            "required": [
+              "code"
+            ],
+            "type": "object",
+            "properties": {
+              "code": {
+                "enum": [
+                  "stack_1006"
+                ],
+                "type": "string"
+              }
+            }
+          }
+        ],
+        "description": "Admins can't change their own role, so there's always an admin left."
       },
       "PagedDataOfTodoListDto": {
         "required": [
@@ -564,6 +589,46 @@
         "type": "string",
         "description": "The id of a user.",
         "format": "uuid"
+      },
+      "UserNotFound": {
+        "required": [
+          "user_id"
+        ],
+        "type": "object",
+        "properties": {
+          "user_id": {
+            "type": "string",
+            "description": "The id of a user.",
+            "format": "uuid"
+          }
+        },
+        "description": "No user has the id."
+      },
+      "UserNotFoundErrorResponse": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/ErrorResponse"
+          },
+          {
+            "required": [
+              "code",
+              "details"
+            ],
+            "type": "object",
+            "properties": {
+              "code": {
+                "enum": [
+                  "stack_1005"
+                ],
+                "type": "string"
+              },
+              "details": {
+                "$ref": "#/components/schemas/UserNotFound"
+              }
+            }
+          }
+        ],
+        "description": "There's no user with this id."
       },
       "UserRoleChange": {
         "required": [

@@ -11,8 +11,13 @@
 
   <ItemGroup>
     <PackageReference Include="Hlibz.McpDocs.AspNetCore" />
+    <PackageReference Include="Hlibz.Results.Mcp" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" />
     <PackageReference Include="ModelContextProtocol.AspNetCore" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="Hlibz.Stack.Tests" />
   </ItemGroup>
 
 </Project>

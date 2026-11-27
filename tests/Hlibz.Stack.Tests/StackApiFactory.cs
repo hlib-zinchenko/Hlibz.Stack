@@ -12,6 +12,9 @@ public sealed class StackApiFactory : WebApplicationFactory<Program>
 {
     private readonly string _database = Path.Combine(Path.GetTempPath(), $"stack-tests-{Guid.NewGuid():N}.db");
 
+    /// <summary>Gets the database file, for the Mcp host to share.</summary>
+    public string Database => _database;
+
     public override async ValueTask DisposeAsync()
     {
         await base.DisposeAsync();

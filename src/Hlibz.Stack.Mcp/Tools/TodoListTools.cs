@@ -38,7 +38,7 @@ internal static class TodoListTools
             cancellationToken)).ValueOrThrow();
 
     [McpServerTool(Name = "create_todo_list", Title = "Create a todo list", Destructive = false, OpenWorld = false)]
-    [Description("Creates an empty todo list for you.")]
+    [Description("Creates an empty todo list for you. Your lists' titles differ (ignoring case), and you may have up to 10 lists.")]
     public static async Task<TodoListDetailDto> CreateAsync(
         ICreateTodoListCommandHandler handler,
         [Description("The list's title, up to 100 characters.")] string title,
@@ -46,7 +46,7 @@ internal static class TodoListTools
         (await handler.HandleAsync(new CreateTodoListCommand(title), cancellationToken)).ValueOrThrow();
 
     [McpServerTool(Name = "rename_todo_list", Title = "Rename a todo list", Destructive = false, Idempotent = true, OpenWorld = false)]
-    [Description("Renames a todo list.")]
+    [Description("Renames a todo list, to a title none of the owner's other lists has.")]
     public static async Task<TodoListDetailDto> RenameAsync(
         IRenameTodoListCommandHandler handler,
         [Description("The list's id.")] Guid todoListId,
@@ -70,7 +70,7 @@ internal static class TodoListTools
     }
 
     [McpServerTool(Name = "add_todo_item", Title = "Add an item", Destructive = false, OpenWorld = false)]
-    [Description("Adds an item at the end of a todo list.")]
+    [Description("Adds an item at the end of a todo list. A list's items' titles differ (ignoring case), and a list holds up to 20 items.")]
     public static async Task<TodoItemDto> AddItemAsync(
         IAddTodoItemCommandHandler handler,
         [Description("The list's id.")] Guid todoListId,

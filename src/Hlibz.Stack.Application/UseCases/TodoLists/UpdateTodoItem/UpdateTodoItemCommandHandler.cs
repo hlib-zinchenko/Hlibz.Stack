@@ -7,23 +7,27 @@ internal sealed class UpdateTodoItemCommandHandler(
     IUnitOfWork unitOfWork,
     TimeProvider time) : IUpdateTodoItemCommandHandler
 {
-    public async Task<Result<TodoItemDto>> HandleAsync(
+    public async Task<Result<TodoItemDto, UpdateTodoItemError>> HandleAsync(
         UpdateTodoItemCommand useCase,
         CancellationToken cancellationToken = default)
     {
-        Result<TodoList> found = await access.GetForChangeAsync(useCase.TodoListId, cancellationToken);
-        if (found is not { IsSuccess: true, Value: { } list })
+        if (await access.FindForChangeAsync(useCase.TodoListId, cancellationToken) is not { } list)
         {
-            return Result<TodoItemDto>.FromFailed(found);
+            return new TodoListNotFound(useCase.TodoListId);
         }
 
         if (list.FindItem(useCase.ItemId) is not { } item)
         {
-            return Result<TodoItemDto>.NotFound(StackErrors.TodoItemNotFound);
+            return new TodoItemNotFound(useCase.ItemId);
         }
 
         if (useCase.Changes.Title is { } title)
         {
+            if (list.FindItemByTitle(title) is { } namesake && namesake != item)
+            {
+                return new TodoItemTitleTaken(namesake.Id);
+            }
+
             item.Rename(title);
         }
 
@@ -33,6 +37,6 @@ internal sealed class UpdateTodoItemCommandHandler(
         }
 
         await unitOfWork.SaveChangesAsync(cancellationToken);
-        return Result<TodoItemDto>.Success(TodoItemDto.From(item));
+        return TodoItemDto.From(item);
     }
 }

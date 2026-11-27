@@ -18,12 +18,12 @@ internal sealed class AuthorizationFilter(ICallerResolver callers) : IUseCaseFil
         Caller? caller = await callers.GetAsync(context.CancellationToken);
         if (caller is null)
         {
-            return Result.Unauthorized();
+            return new Unauthorized();
         }
 
         if (!caller.IsAdmin && context.UseCaseType.IsDefined(typeof(AdminOnlyAttribute), inherit: false))
         {
-            return Result.Forbidden();
+            return new Forbidden();
         }
 
         return await next(context);

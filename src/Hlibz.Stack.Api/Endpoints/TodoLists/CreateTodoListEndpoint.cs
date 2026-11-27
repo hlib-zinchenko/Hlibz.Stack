@@ -9,7 +9,7 @@ internal sealed class CreateTodoListEndpoint : IEndpoint<TodoListsEndpointGroup>
     public RouteHandlerBuilder Map(IEndpointRouteBuilder group) =>
         group.MapPost(string.Empty, HandleAsync).WithSummary("Creates a todo list.");
 
-    private static Task<Result<TodoListDetailDto>> HandleAsync(
+    private static Task<Result<TodoListDetailDto, CreateTodoListError>> HandleAsync(
         CreateTodoListCommand command,
         [FromServices] ICreateTodoListCommandHandler handler,
         CancellationToken cancellationToken) =>
